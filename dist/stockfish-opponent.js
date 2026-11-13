@@ -1,5 +1,6 @@
 // Stockfish runs in an isolated worker; the UI can terminate it on pause or resignation.
-export function stockfishThinkTime(clock,increment=0){if(!clock)return 10000;return Math.max(50,Math.min(10000,Math.floor(clock.b*1000/30+increment*700),Math.floor(clock.b*1000-250)))}
+import {botTiming} from './game-core.js';
+export function stockfishThinkTime(clock,increment=0){return botTiming(4,clock,increment).budget}
 export class StockfishOpponent{
  constructor(){this.onmessage=null;this.onerror=null;this.closed=false;this.ready=false;this.pending=null;this.watchdog=setTimeout(()=>this.fail('Stockfish did not load.'),20000);this.loading=this.load()}
  async load(){try{const encoded=(await Promise.all(Array.from({length:5},async(_,i)=>{const response=await fetch(new URL('./vendor/stockfish/engine-part-'+i+'.txt',import.meta.url));if(!response.ok)throw Error('Engine download failed');return response.text()}))).join('');if(this.closed)return;const bytes=Uint8Array.from(atob(encoded.trim()),c=>c.charCodeAt(0));this.wasmURL=URL.createObjectURL(new Blob([bytes],{type:'application/wasm'}));const engineURL=new URL('./vendor/stockfish/stockfish-19-lite-single.js',import.meta.url);engineURL.hash=encodeURIComponent(this.wasmURL);this.worker=new Worker(engineURL);this.worker.onerror=e=>this.fail(e.message||'Stockfish could not load.');this.worker.onmessage=({data})=>{for(const line of String(data).split('\n'))this.receive(line.trim())};this.worker.postMessage('uci')}catch(e){this.fail(e.message)}}
