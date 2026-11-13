@@ -7,6 +7,9 @@ A private, browser-local chess trainer with adaptive, per-skill puzzle selection
 - Three puzzles per session, selected sequentially from unused positions. Targets adjust with measured active time, correctness, and hint use.
 - Real legal moves, promotions, automatic opponent replies, mate-in-one alternatives, explanations, solution playback, saved reflections, rating history, weekly checklists, JSON backups.
 - Game ratings and puzzle targets are separate. The adjustment is a transparent training heuristic, not an Elo estimator.
+- Four local computer opponents with distinct search budgets: Deadfish, Little Fish, Big Fish, and Razor Teeth. Razor Teeth uses deeper alpha-beta search with iterative deepening, capture follow-up, move ordering, and a transposition table; its target is strong club play, not a certified 1700 Elo rating.
+- Drag-and-drop or click-to-move on the board. During the computer's turn, queue one premove and cancel it before it executes.
+- Move review uses the same local search for a suggested move, evaluation bar, and Best/Good/Decent/Mistake/Blunder labels.
 - Records stay in browser localStorage. Backups move records across browsers. There is no cloud data synchronization.
 
 ## Puzzle bank
@@ -22,4 +25,4 @@ New puzzle selection excludes seen puzzle IDs and piece-placement/side-to-move c
 
 ## Checks
 
-Run `node --test tests/training.test.mjs`. The app is buildless; serve `dist/` as static files. Hosting identity is preserved in `.openai/hosting.json`.
+Run `node --test tests/*.test.mjs`. The app is buildless; serve `dist/` as static files. Hosting identity is preserved in `.openai/hosting.json`.
