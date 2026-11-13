@@ -9,3 +9,5 @@ Exact corresponding source and build scripts: [stockfish.js v19.0.1](https://git
 Download source: [v19.0.1 source archive](https://github.com/nmrugg/stockfish.js/archive/0d5dd7944f88c817c07a26bc4fb1905d5f9c46d6.tar.gz).
 
 The source's build instructions include neural network retrieval and the `build-single-lite` target. Engine files are distributed without modification. The engine communicates with the application through the UCI protocol in a separate worker.
+
+The WebAssembly file is served with a `.bin` extension for hosting compatibility; its bytes are unchanged. The official loader is given that URL through its supported URL fragment.
