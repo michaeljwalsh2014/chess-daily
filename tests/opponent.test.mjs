@@ -14,13 +14,13 @@ test('all five computer levels return legal moves without an external engine',()
   }
 });
 
-test('Razor Teeth gets the longest search without a long clock delay',()=>{
+test('Razor Teeth keeps its deeper search within a quicker response budget',()=>{
   assert.deepEqual([LEVELS[1].name,LEVELS[2].name,LEVELS[3].name,LEVELS[4].name],['Deadfish','Little Fish','Big Fish','Razor Teeth']);
   assert.ok(LEVELS[4].depth>LEVELS[3].depth);
   assert.ok(LEVELS[4].budget<=4000);
   assert.ok(LEVELS[4].delay<=5000);
   assert.equal(LEVELS[4].engine,undefined);
-  assert.deepEqual([LEVELS[4].depth,LEVELS[4].budget,LEVELS[4].delay],[8,4000,5000]);
+  assert.deepEqual([LEVELS[4].depth,LEVELS[4].budget,LEVELS[4].delay],[8,1600,900]);
   assert.equal(LEVELS[5].name,'Cyber Tank');
   assert.ok(LEVELS[5].depth>LEVELS[4].depth);
   assert.ok(LEVELS[5].budget>LEVELS[4].budget);
