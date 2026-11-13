@@ -1,5 +1,2 @@
-import {Chess} from './vendor/chess.js';
-const values={p:100,n:320,b:330,r:500,q:900,k:0};
-function score(c){if(c.isCheckmate())return -100000;if(c.isDraw())return 0;let n=0;for(const row of c.board())for(const p of row)if(p)n+=(p.color===c.turn()?1:-1)*(values[p.type]+(p.type==='p'?0:3*(7-Math.abs(3.5-'abcdefgh'.indexOf(p.square[0]))-Math.abs(3.5-(+p.square[1]-1)))));return n}
-function search(c,d,a,b){if(!d||c.isGameOver())return score(c);let best=-Infinity;for(const m of c.moves({verbose:true}).sort((x,y)=>(values[y.captured]||0)-(values[x.captured]||0))){c.move(m);const v=-search(c,d-1,-b,-a);c.undo();best=Math.max(best,v);a=Math.max(a,v);if(a>=b)break}return best}
-self.onmessage=({data})=>{try{let c=new Chess(data.fen),moves=c.moves({verbose:true}),ranked=[];for(const m of moves){c.move(m);ranked.push({move:{from:m.from,to:m.to,promotion:m.promotion},score:-search(c,Number(data.level)-1,-Infinity,Infinity)});c.undo()}ranked.sort((a,b)=>b.score-a.score);let range=data.level===1?Math.min(5,ranked.length):data.level===2?Math.min(2,ranked.length):1;self.postMessage({id:data.id,move:ranked[Math.floor(Math.random()*range)]?.move})}catch{self.postMessage({id:data.id,error:true})}}
+import {chooseMove} from './engine-core.js';
+self.onmessage=({data})=>{try{self.postMessage({id:data.id,...chooseMove(data.fen,Number(data.level),data.chosen)})}catch{self.postMessage({id:data.id,error:true})}};
