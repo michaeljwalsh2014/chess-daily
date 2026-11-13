@@ -272,8 +272,12 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
     pool = candidateRoots.filter(root => candidateRoots[0].score - root.score <= 80).slice(0, 3);
   }
   let selected = level === 1 ? pool[Math.floor(Math.random() * pool.length)] : candidateRoots[0];
+  if (level === 2) {
+    const nearBest = candidateRoots.filter(root => candidateRoots[0].score - root.score <= 35).slice(0, 2);
+    if (nearBest.length > 1) selected = nearBest[Math.floor(seededFraction(seed, fen) * nearBest.length)];
+  }
   if (variety && historyMoves.length < 16) {
-    const tolerance = ({ 1: 120, 2: 90, 3: 70, 4: 45, 5: 30, 6: 20 })[level] || 50;
+    const tolerance = ({ 1: 120, 2: 35, 3: 70, 4: 45, 5: 30, 6: 20 })[level] || 50;
     const openingChoices = candidateRoots.filter(root => candidateRoots[0].score - root.score <= tolerance).slice(0, 5);
     if (openingChoices.length > 1) {
       selected = openingChoices[Math.floor(seededFraction(seed, fen) * openingChoices.length)];

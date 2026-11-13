@@ -1,4 +1,4 @@
-import { chooseMove } from './engine-core.js?v=20261113-12';
+import { chooseMove } from './engine-core.js?v=20261113-13';
 
 self.onmessage = ({ data }) => {
   try {
