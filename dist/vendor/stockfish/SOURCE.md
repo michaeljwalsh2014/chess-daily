@@ -13,3 +13,5 @@ The source's build instructions include neural network retrieval and the `build-
 The unchanged WebAssembly bytes are stored as base64 text for hosting compatibility. The adapter decodes them into an application/wasm Blob and provides its URL through the official loader’s supported URL fragment.
 
 Engine bytes are losslessly gzip compressed before base64 encoding to reduce the hosted download. The browser decompresses them before compilation.
+
+The website loads the pinned WebAssembly asset from https://unpkg.com/stockfish@19.0.1/bin/stockfish-19-lite-single.wasm and verifies SHA-256 ee4f115bdb2d32cadf96cada104a05b5ec257d7ad6f57582190b49bc71f096de before compilation. The same bytes are preserved in the repository under engine-source/.
