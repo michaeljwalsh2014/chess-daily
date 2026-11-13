@@ -1,6 +1,6 @@
 import {Chess} from './vendor/chess.js';
 export const LEVELS={1:{name:'Easy',depth:2,budget:300,delay:1800},2:{name:'Medium',depth:3,budget:900,delay:2800},3:{name:'Hard',depth:4,budget:1800,delay:4000},4:{name:'Very Hard',engine:'stockfish',budget:10000,delay:5000}};
-export const CONTROLS={'0':{name:'Untimed',seconds:0,increment:0},'5':{name:'5 minutes',seconds:300,increment:0},'10':{name:'10 minutes',seconds:600,increment:0},'15+10':{name:'15 minutes + 10 seconds',seconds:900,increment:10},'30':{name:'30 minutes',seconds:1800,increment:0}};
+export const CONTROLS={'1':{name:'1 minute',seconds:60,increment:0},'0':{name:'Untimed',seconds:0,increment:0},'5':{name:'5 minutes',seconds:300,increment:0},'10':{name:'10 minutes',seconds:600,increment:0},'15+10':{name:'15 minutes + 10 seconds',seconds:900,increment:10},'30':{name:'30 minutes',seconds:1800,increment:0}};
 export const ENDGAMES=[
 {id:'queen-box',name:'King & queen',fen:'7k/8/5K2/8/4Q3/8/8/8 w - - 0 1',tip:'Use your queen to shrink the king’s space. Bring your king closer, then give mate. Leave a legal move if you are not giving check.'},
 {id:'rook-box',name:'King & rook',fen:'7k/8/5K2/8/8/8/8/R7 w - - 0 1',tip:'Use your rook to cut off a rank or file. Bring your king close enough to cover escape squares, then check along the edge.'},
