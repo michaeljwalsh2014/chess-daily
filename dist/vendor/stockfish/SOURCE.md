@@ -10,4 +10,4 @@ Download source: [v19.0.1 source archive](https://github.com/nmrugg/stockfish.js
 
 The source's build instructions include neural network retrieval and the `build-single-lite` target. Engine files are distributed without modification. The engine communicates with the application through the UCI protocol in a separate worker.
 
-The WebAssembly file is served with a `.bin` extension for hosting compatibility; its bytes are unchanged. The official loader is given that URL through its supported URL fragment.
+The unchanged WebAssembly bytes are stored as base64 text for hosting compatibility. The adapter decodes them into an application/wasm Blob and provides its URL through the official loader’s supported URL fragment.
