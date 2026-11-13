@@ -1,5 +1,5 @@
 import { Chess } from './vendor/chess.js';
-import { LEVELS } from './game-core.js?v=20261113-11';
+import { LEVELS } from './game-core.js?v=20261113-12';
 
 const pieceValue = { p: 100, n: 325, b: 335, r: 500, q: 950, k: 0 };
 const mateScore = 100000;
@@ -85,7 +85,7 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
     } catch { /* Keep the supplied FEN if the move history cannot be restored. */ }
   }
   const config = LEVELS[level] || LEVELS[2];
-  const budget = Math.max(level === 6 ? 5 : 50, Number(budgetOverride) || config.budget);
+  const budget = Math.max(level === 7 ? 5 : 50, Number(budgetOverride) || config.budget);
   const deadline = Date.now() + budget;
   const variety = options.variety === true;
   const seed = options.seed;
@@ -258,7 +258,7 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
 
   const best = completedRoots[0];
   let candidateRoots = completedRoots;
-  if (level === 6 && historyMoves.length) {
+  if ([6, 7].includes(level) && historyMoves.length) {
     const withoutRepetition = completedRoots.filter(root => {
       chess.move(root.move);
       const repeats = chess.isThreefoldRepetition();
@@ -277,7 +277,7 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
     if (nearBest.length > 1) selected = nearBest[Math.floor(seededFraction(seed, fen) * nearBest.length)];
   }
   if (variety && historyMoves.length < 16) {
-    const tolerance = ({ 1: 120, 2: 35, 3: 70, 4: 45, 5: 30, 6: 20 })[level] || 50;
+    const tolerance = ({ 1: 120, 2: 35, 3: 70, 4: 45, 5: 30, 6: 20, 7: 20 })[level] || 50;
     const openingChoices = candidateRoots.filter(root => candidateRoots[0].score - root.score <= tolerance).slice(0, 5);
     if (openingChoices.length > 1) {
       selected = openingChoices[Math.floor(seededFraction(seed, fen) * openingChoices.length)];
