@@ -60,8 +60,15 @@ function isCapture(move) {
   return Boolean(move.captured || move.flags.includes('e'));
 }
 
-export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null) {
-  const chess = new Chess(fen);
+export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null, historyMoves = []) {
+  let chess = new Chess(fen);
+  if (historyMoves.length) {
+    try {
+      const withHistory = new Chess();
+      for (const move of historyMoves) withHistory.move(move);
+      if (withHistory.fen() === fen) chess = withHistory;
+    } catch { /* Keep the supplied FEN if the move history cannot be restored. */ }
+  }
   const config = LEVELS[level] || LEVELS[2];
   const budget = Math.max(50, Number(budgetOverride) || config.budget);
   const deadline = Date.now() + budget;
@@ -237,7 +244,16 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null)
     pool = completedRoots.filter(root => completedRoots[0].score - root.score <= 80).slice(0, 3);
   }
   const best = completedRoots[0];
-  const selected = level === 1 ? pool[Math.floor(Math.random() * pool.length)] : best;
+  let selected = level === 1 ? pool[Math.floor(Math.random() * pool.length)] : best;
+  if (level === 6 && historyMoves.length) {
+    const withoutRepetition = completedRoots.filter(root => {
+      chess.move(root.move);
+      const repeats = chess.isThreefoldRepetition();
+      chess.undo();
+      return !repeats;
+    });
+    if (withoutRepetition.length) selected = withoutRepetition[0];
+  }
   const chosenRoot = chosen == null ? null : completedRoots.find(root => root.san === chosen || root.code === chosen);
   const actualScore = chosenRoot?.score ?? best.score;
   const actualMate = Math.abs(actualScore) >= mateScore - 64
