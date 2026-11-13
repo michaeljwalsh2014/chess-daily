@@ -1,5 +1,5 @@
 import {Chess} from './vendor/chess.js';
-export const LEVELS={1:{name:'Deadfish',depth:2,budget:300,delay:1800},2:{name:'Little Fish',depth:2,budget:500,delay:2200},3:{name:'Big Fish',depth:4,budget:1800,delay:4000},4:{name:'Razor Teeth',depth:8,budget:4000,delay:5000},5:{name:'Cyber Tank',depth:10,budget:8000,delay:6000}};
+export const LEVELS={1:{name:'Deadfish',depth:2,budget:220,delay:350},2:{name:'Little Fish',depth:2,budget:350,delay:450},3:{name:'Big Fish',depth:4,budget:900,delay:700},4:{name:'Razor Teeth',depth:8,budget:1600,delay:900},5:{name:'Cyber Tank',depth:10,budget:2400,delay:1100}};
 export const CONTROLS={'1':{name:'1 minute',seconds:60,increment:0},'0':{name:'Untimed',seconds:0,increment:0},'5':{name:'5 minutes',seconds:300,increment:0},'10':{name:'10 minutes',seconds:600,increment:0},'15+10':{name:'15 minutes + 10 seconds',seconds:900,increment:10},'30':{name:'30 minutes',seconds:1800,increment:0}};
 export const ENDGAMES=[
 {id:'queen-box',name:'King & queen',fen:'7k/8/5K2/8/4Q3/8/8/8 w - - 0 1',tip:'Use your queen to shrink the king’s space. Bring your king closer, then give mate. Leave a legal move if you are not giving check.'},
