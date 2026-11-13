@@ -79,7 +79,7 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
   let chess = new Chess(fen);
   if (historyMoves.length) {
     try {
-      const withHistory = new Chess();
+      const withHistory = options.initialFen ? new Chess(options.initialFen) : new Chess();
       for (const move of historyMoves) withHistory.move(move);
       if (withHistory.fen() === fen) chess = withHistory;
     } catch { /* Keep the supplied FEN if the move history cannot be restored. */ }
@@ -87,7 +87,7 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
   const config = LEVELS[level] || LEVELS[2];
   const budget = Math.max(50, Number(budgetOverride) || config.budget);
   const deadline = Date.now() + budget;
-  const arena = options.arena === true;
+  const variety = options.variety === true;
   const seed = options.seed;
   const table = new Map();
   const killers = Array.from({ length: 64 }, () => []);
@@ -272,7 +272,7 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
     pool = candidateRoots.filter(root => candidateRoots[0].score - root.score <= 80).slice(0, 3);
   }
   let selected = level === 1 ? pool[Math.floor(Math.random() * pool.length)] : candidateRoots[0];
-  if (arena && historyMoves.length < 16) {
+  if (variety && historyMoves.length < 16) {
     const tolerance = ({ 1: 120, 2: 90, 3: 70, 4: 45, 5: 30, 6: 20 })[level] || 50;
     const openingChoices = candidateRoots.filter(root => candidateRoots[0].score - root.score <= tolerance).slice(0, 5);
     if (openingChoices.length > 1) {
