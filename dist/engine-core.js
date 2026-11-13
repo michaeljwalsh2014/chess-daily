@@ -60,7 +60,22 @@ function isCapture(move) {
   return Boolean(move.captured || move.flags.includes('e'));
 }
 
-export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null, historyMoves = []) {
+function seededFraction(seed, position) {
+  let hash = (Number(seed) >>> 0) || 2166136261;
+  for (const char of position) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x7feb352d);
+  hash ^= hash >>> 15;
+  hash = Math.imul(hash, 0x846ca68b);
+  hash ^= hash >>> 16;
+  return (hash >>> 0) / 4294967296;
+}
+
+export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null, options = {}) {
+  const historyMoves = options.history || [];
   let chess = new Chess(fen);
   if (historyMoves.length) {
     try {
@@ -72,6 +87,8 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
   const config = LEVELS[level] || LEVELS[2];
   const budget = Math.max(50, Number(budgetOverride) || config.budget);
   const deadline = Date.now() + budget;
+  const arena = options.arena === true;
+  const seed = options.seed;
   const table = new Map();
   const killers = Array.from({ length: 64 }, () => []);
   const history = new Map();
@@ -239,12 +256,8 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
     }
   }
 
-  let pool = completedRoots;
-  if (level === 1) {
-    pool = completedRoots.filter(root => completedRoots[0].score - root.score <= 80).slice(0, 3);
-  }
   const best = completedRoots[0];
-  let selected = level === 1 ? pool[Math.floor(Math.random() * pool.length)] : best;
+  let candidateRoots = completedRoots;
   if (level === 6 && historyMoves.length) {
     const withoutRepetition = completedRoots.filter(root => {
       chess.move(root.move);
@@ -252,7 +265,19 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
       chess.undo();
       return !repeats;
     });
-    if (withoutRepetition.length) selected = withoutRepetition[0];
+    if (withoutRepetition.length) candidateRoots = withoutRepetition;
+  }
+  let pool = candidateRoots;
+  if (level === 1) {
+    pool = candidateRoots.filter(root => candidateRoots[0].score - root.score <= 80).slice(0, 3);
+  }
+  let selected = level === 1 ? pool[Math.floor(Math.random() * pool.length)] : candidateRoots[0];
+  if (arena && historyMoves.length < 16) {
+    const tolerance = ({ 1: 120, 2: 90, 3: 70, 4: 45, 5: 30, 6: 20 })[level] || 50;
+    const openingChoices = candidateRoots.filter(root => candidateRoots[0].score - root.score <= tolerance).slice(0, 5);
+    if (openingChoices.length > 1) {
+      selected = openingChoices[Math.floor(seededFraction(seed, fen) * openingChoices.length)];
+    }
   }
   const chosenRoot = chosen == null ? null : completedRoots.find(root => root.san === chosen || root.code === chosen);
   const actualScore = chosenRoot?.score ?? best.score;
