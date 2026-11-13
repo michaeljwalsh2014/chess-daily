@@ -7,7 +7,7 @@ A private, browser-local chess trainer with adaptive, per-skill puzzle selection
 - Three puzzles per session, selected sequentially from unused positions. Targets adjust with measured active time, correctness, and hint use.
 - Real legal moves, promotions, automatic opponent replies, mate-in-one alternatives, explanations, solution playback, saved reflections, rating history, weekly checklists, JSON backups.
 - Game ratings and puzzle targets are separate. The adjustment is a transparent training heuristic, not an Elo estimator.
-- Four local computer opponents with distinct search budgets: Deadfish, Little Fish, Big Fish, and Razor Teeth. Razor Teeth uses deeper alpha-beta search with iterative deepening, capture follow-up, move ordering, and a transposition table; its target is strong club play, not a certified 1700 Elo rating.
+- Five local computer opponents with distinct search budgets: Deadfish (~500), Little Fish (~700), Big Fish (~1000), Razor Teeth (~1700), and Cyber Tank (~2000). These Elo values are approximate targets, not measured ratings. Razor Teeth's search is unchanged; Cyber Tank uses the deepest and longest local search.
 - Drag-and-drop or click-to-move on the board. During the computer's turn, queue one premove and cancel it before it executes.
 - Move review uses the same local search for a suggested move, evaluation bar, and Best/Good/Decent/Mistake/Blunder labels.
 - Records stay in browser localStorage. Backups move records across browsers. There is no cloud data synchronization.

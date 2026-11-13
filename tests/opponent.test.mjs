@@ -6,8 +6,8 @@ import {chooseMove} from '../dist/engine-core.js';
 let reply;globalThis.self={postMessage:r=>{reply=r}};
 await import('../dist/opponent.js');
 
-test('all four computer levels return legal moves without an external engine',()=>{
-  for(const level of [1,2,3,4]){
+test('all five computer levels return legal moves without an external engine',()=>{
+  for(const level of [1,2,3,4,5]){
     const c=new Chess();c.move('e4');
     self.onmessage({data:{fen:c.fen(),level,id:level,budget:250}});
     assert.equal(reply.id,level);assert.equal(reply.engine,'search');assert.ok(c.move(reply.move));
@@ -20,6 +20,10 @@ test('Razor Teeth gets the longest search without a long clock delay',()=>{
   assert.ok(LEVELS[4].budget<=4000);
   assert.ok(LEVELS[4].delay<=5000);
   assert.equal(LEVELS[4].engine,undefined);
+  assert.deepEqual([LEVELS[4].depth,LEVELS[4].budget,LEVELS[4].delay],[8,4000,5000]);
+  assert.equal(LEVELS[5].name,'Cyber Tank');
+  assert.ok(LEVELS[5].depth>LEVELS[4].depth);
+  assert.ok(LEVELS[5].budget>LEVELS[4].budget);
 });
 
 test('the deep search sees mate and flags a missed forced mate',()=>{
