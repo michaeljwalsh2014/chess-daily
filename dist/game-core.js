@@ -5,7 +5,7 @@ export const ENDGAMES=[
 {id:'queen-box',name:'King & queen',fen:'7k/8/5K2/8/4Q3/8/8/8 w - - 0 1',tip:'Use your queen to shrink the king’s space. Bring your king closer, then give mate. Leave a legal move if you are not giving check.'},
 {id:'rook-box',name:'King & rook',fen:'7k/8/5K2/8/8/8/8/R7 w - - 0 1',tip:'Use your rook to cut off a rank or file. Bring your king close enough to cover escape squares, then check along the edge.'},
 {id:'pawn-race',name:'Promote a pawn',fen:'6k1/8/3PK3/8/8/8/8/8 w - - 0 1',tip:'Keep your king in front of the pawn when it needs protection. Reach the last rank, promote, then finish with checkmate.'},
-{id:'two-bishops',name:'Mate with two bishops',fen:'7k/8/5K2/8/4B3/8/2B5/8 w - - 0 1',tip:'Use the bishops together to push the king toward a corner. Bring your king close to take away escape squares, then deliver mate.'},
+{id:'two-bishops',name:'Mate with two bishops',fen:'7k/8/5K2/8/4B3/8/8/2B5 w - - 0 1',tip:'Use the bishops together to push the king toward a corner. Bring your king close to take away escape squares, then deliver mate.'},
 {id:'connected-pawns',name:'Advance connected passers',fen:'8/4k3/8/2PP4/3K4/8/8/8 w - - 0 1',tip:'Keep your king close enough to protect both connected pawns. Advance them together so the enemy king cannot stop both.'},
 {id:'outside-passer',name:'Race an outside passer',fen:'8/8/7k/P7/3K4/8/8/8 w - - 0 1',tip:'Use your king to keep the opposing king away, then advance the outside pawn. Promote safely before going for checkmate.'}
 ];
