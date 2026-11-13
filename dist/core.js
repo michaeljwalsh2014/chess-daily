@@ -42,7 +42,7 @@ export function validBackup(x,bankIds){
     }
   }
   if(x.draft&&(!/^([0-3])-([0-3])$/.test(x.draft.lesson)||!Array.isArray(x.draft.answers)||!Array.isArray(x.draft.outcomes)))return false;
-  const gameOK=g=>{try{if(!g||!Array.isArray(g.moves)||g.moves.length>2000||![1,2,3].includes(g.level))return false;gameFrom(g);if(g.clock&&(!finite(g.clock.w)||!finite(g.clock.b)))return false;if(g.increment!=null&&!finite(g.increment,0,120))return false;return true}catch{return false}};
+  const gameOK=g=>{try{if(!g||!Array.isArray(g.moves)||g.moves.length>2000||![1,2,3,4].includes(g.level))return false;gameFrom(g);if(g.clock&&(!finite(g.clock.w)||!finite(g.clock.b)))return false;if(g.increment!=null&&!finite(g.increment,0,120))return false;return true}catch{return false}};
   if(x.games&&(!Array.isArray(x.games)||!x.games.every(gameOK)))return false;
   if(x.match&&!gameOK(x.match))return false;
   if(x.trainingCoach&&(!finite(x.trainingCoach.target,400,2500)||!finite(x.trainingCoach.fast)||!finite(x.trainingCoach.struggles)||!finite(x.trainingCoach.total)||!finite(x.trainingCoach.solved)))return false;
