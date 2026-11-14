@@ -133,3 +133,11 @@ body[data-piece-theme=castle] .settings-preview img{width:120%;height:120%;max-w
 
 .progress-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.progress-card{display:flex;flex-direction:column;align-items:flex-start}.progress-card p{margin:8px 0}.progress-card .button{margin-top:12px}.progress-number{font-size:clamp(38px,5vw,58px);font-weight:750;line-height:1.1;margin-top:14px;color:var(--deep)}.progress-simple details>summary{cursor:pointer;font-size:1.1em}.progress-simple details[open]>summary{margin-bottom:14px}@media(max-width:700px){.progress-overview{grid-template-columns:1fr}}
 
+
+/* Fresh chess greens with clear dark lettering. */
+:root{--green:#527b2d;--deep:#344f20;--sage:#dcebc9;--soft:#f0f5e9;--line:#dfe7d6}
+.button.primary{background:#81ad46;color:#17250d;border:1px solid #719b3c;box-shadow:0 3px 0 #628b32}.button.primary:hover{background:#91bb56}
+.primary-nav button.active{background:#e7f0db;color:#3d6123;box-shadow:inset 0 -3px #81ad46}.primary-nav button:hover{background:#f0f5e9}
+.button.secondary:hover,.global-settings:hover{background:#eef5e5;border-color:#a9c58b}
+.device-switch button[aria-pressed="true"]{background:#e7f0db;color:#3d6123}
+.badge{background:#e8f1dc;color:#496d2b}.coach-note{background:#f0f6e8;border-color:#dae7cc}.game-clock.running{background:#eaf3df;border-color:#91b567}
