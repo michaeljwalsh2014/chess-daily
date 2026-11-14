@@ -108,3 +108,6 @@ body[data-board-theme=forest] .square{background:#ebefdf}body[data-board-theme=f
 #game-settings-dialog .bot-picker-option{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 12px}
 .settings-piece-icon{width:36px;height:36px;object-fit:contain;flex:none}
 #game-settings-dialog .settings-preview{width:min(100%,150px)}
+/* Castle Guard art includes transparent padding; fill more of each square. */
+body[data-piece-theme=castle] .board .piece-img{width:120%;height:120%;max-width:none;flex:none}
+body[data-piece-theme=castle] .settings-preview img{width:120%;height:120%;max-width:none;flex:none}
