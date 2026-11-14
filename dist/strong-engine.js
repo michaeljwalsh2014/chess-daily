@@ -50,9 +50,9 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
           depth = Number(line.match(/\bdepth (\d+)/)?.[1]) || depth;
           nodes = Number(line.match(/\bnodes (\d+)/)?.[1]) || nodes;
           const cp = line.match(/\bscore cp (-?\d+)/);
-          if (cp && rank === 1) { score = Number(cp[1]); mate = null; }
+          if (cp && rank === 1 && !/lowerbound|upperbound/.test(line)) { score = Number(cp[1]); mate = null; }
           const m = line.match(/\bscore mate (-?\d+)/);
-          if (m && rank === 1) { mate = Number(m[1]); score = Math.sign(mate || -1) * 100000; }
+          if (m && rank === 1 && !/lowerbound|upperbound/.test(line)) { mate = Number(m[1]); score = Math.sign(mate || -1) * 100000; }
         } else if (line.startsWith('bestmove ')) {
           let code = line.split(/\s+/)[1];
           if (data.autoStrength != null && candidates.size) {

@@ -84,3 +84,14 @@ test('Auto returns legal moves at forgiving and challenging settings',async()=>{
   assert.ok(c.move(r.move));
  }
 });
+
+test('review ignores incomplete bound scores and keeps the last exact score',async()=>{
+  const c=new Chess();
+  const makeWorker=()=>{const worker={terminate(){},postMessage(command){
+    if(command==='uci')queueMicrotask(()=>worker.onmessage({data:'uciok'}));
+    if(command==='isready')queueMicrotask(()=>worker.onmessage({data:'readyok'}));
+    if(command.startsWith('go '))queueMicrotask(()=>worker.onmessage({data:'info depth 8 score cp 20 nodes 20 pv e2e4\ninfo depth 9 score cp 700 lowerbound nodes 40 pv e2e4\nbestmove e2e4'}));
+  }};return worker};
+  const result=await stockfishMove({fen:c.fen(),level:7,review:true,budget:100},makeWorker);
+  assert.equal(result.score,20);assert.ok(c.move(result.move));
+});
