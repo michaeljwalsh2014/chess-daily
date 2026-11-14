@@ -92,3 +92,7 @@ body.layout-ipad.ipad-game .endgame-tip{position:absolute;right:10px;bottom:108p
 body.layout-computer{font-size:17px}body.layout-computer .fine{font-size:15px}body.layout-computer .button,body.layout-computer .form-field{font-size:16px}body.layout-computer .bot-picker-details summary,body.layout-computer .bot-picker-option{font-size:16px}body.layout-computer .game-clock span,body.layout-computer .game-actions>.fine{font-size:14px}body.layout-computer .game-status h2{font-size:21px}body.layout-computer .device-switch button{font-size:13px}
 
 .square:has(.piece-img){isolation:isolate}.piece-img{position:relative;z-index:1}
+body[data-board-theme=green] .square{background:#ebecd0}body[data-board-theme=green] .square.dark{background:#779556}
+body[data-board-theme=blue] .square{background:#e6eef5}body[data-board-theme=blue] .square.dark{background:#4b78a4}
+body[data-board-theme=slate] .square{background:#e8e8e5}body[data-board-theme=slate] .square.dark{background:#68777a}
+body[data-board-theme=walnut] .square{background:#f0d9b5}body[data-board-theme=walnut] .square.dark{background:#946344}
