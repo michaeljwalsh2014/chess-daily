@@ -2,17 +2,146 @@ import {Chess} from './vendor/chess.js';
 export const LEVELS={8:{name:'Auto',description:'Automatically adjusts to your level',depth:12,budget:1600,delay:300},1:{name:'Deadfish',depth:2,budget:220,delay:350},2:{name:'Little Fish',depth:2,budget:350,delay:1450},3:{name:'Big Fish',depth:4,budget:900,delay:700},4:{name:'Razor Teeth',depth:9,budget:2200,delay:350,elo:1800},5:{name:'Cyber Tank',depth:16,budget:6000,delay:0,elo:2100},6:{name:'Hyper Bullet Bot 2.0',depth:12,budget:250,delay:0},7:{name:'Hyper Bullet Bot 3.0',depth:20,budget:800,delay:0}};
 export const CONTROLS={'30s':{name:'30 seconds · Hyperbullet',seconds:30,increment:0},'1':{name:'1 minute',seconds:60,increment:0},'0':{name:'Untimed',seconds:0,increment:0},'5':{name:'5 minutes',seconds:300,increment:0},'10':{name:'10 minutes',seconds:600,increment:0},'15+10':{name:'15 minutes + 10 seconds',seconds:900,increment:10},'30':{name:'30 minutes',seconds:1800,increment:0}};
 export const ENDGAMES=[
-{id:'back-rank-mate',name:'Back-rank checkmate',fen:'6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1',tip:'The black king is trapped behind its own pawns. Bring your rook to the eighth rank and check that every escape square is covered.'},
-{id:'queen-box',name:'King & queen',fen:'7k/8/5K2/8/4Q3/8/8/8 w - - 0 1',tip:'Use your queen to shrink the king’s space. Bring your king closer, then give mate. Leave a legal move if you are not giving check.'},
-{id:'rook-box',name:'King & rook',fen:'7k/8/5K2/8/8/8/8/R7 w - - 0 1',tip:'Use your rook to cut off a rank or file. Bring your king close enough to cover escape squares, then check along the edge.'},
-{id:'pawn-race',name:'Promote a pawn',fen:'6k1/8/3PK3/8/8/8/8/8 w - - 0 1',tip:'Keep your king in front of the pawn when it needs protection. Reach the last rank, promote, then finish with checkmate.'},
-{id:'two-bishops',name:'Mate with two bishops',fen:'7k/8/5K2/8/4B3/8/8/2B5 w - - 0 1',tip:'Use the bishops together to push the king toward a corner. Bring your king close to take away escape squares, then deliver mate.'},
-{id:'connected-pawns',name:'Advance connected passers',fen:'8/4k3/8/2PP4/3K4/8/8/8 w - - 0 1',tip:'Keep your king close enough to protect both connected pawns. Advance them together so the enemy king cannot stop both.'},
-{id:'two-rooks',name:'Mate with two rooks',fen:'7k/8/8/8/8/4K3/8/R5R1 w - - 0 1',tip:'Use the rooks together to cut off ranks or files, gradually pushing the king to the edge.'},
-{id:'queen-vs-pawn',name:'Queen against a pawn',fen:'7k/8/6p1/8/8/3K4/8/3Q4 w - - 0 1',tip:'Stop the pawn from promoting while bringing your king closer. Watch for checks and stalemate.'},
-{id:'rook-and-pawn',name:'Rook and passed pawn',fen:'7k/8/8/3P4/4K3/8/8/R7 w - - 0 1',tip:'Use your rook to cut off the enemy king, and bring your king forward to support the pawn.'},
-{id:'pawn-opposition',name:'King and pawn opposition',fen:'8/8/4k3/8/4K3/4P3/8/8 w - - 0 1',tip:'Use your king to claim key squares ahead of the pawn. Look for a way to gain the opposition.'},
-{id:'outside-passer',name:'Race an outside passer',fen:'8/8/7k/P7/3K4/8/8/8 w - - 0 1',tip:'Use your king to keep the opposing king away, then advance the outside pawn. Promote safely before going for checkmate.'}
+  {
+    "id": "back-rank-mate",
+    "name": "Back-rank checkmate",
+    "fen": "6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1",
+    "tip": "The black king is trapped behind its own pawns. Bring your rook to the eighth rank and check that every escape square is covered.",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "finish-queen-box",
+    "name": "Finish a queen checkmate",
+    "fen": "6k1/4Q3/5K2/8/8/8/8/8 w - - 2 2",
+    "tip": "Use the king and your remaining pieces to finish this position. Use your queen to shrink the king’s space. Bring your king closer, then give mate. Leave a legal move if you are not giving check.",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "finish-rook-box",
+    "name": "Finish a rook checkmate",
+    "fen": "6k1/8/6K1/8/8/8/8/R7 w - - 2 2",
+    "tip": "Use the king and your remaining pieces to finish this position. Use your rook to cut off a rank or file. Bring your king close enough to cover escape squares, then check along the edge.",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "finish-two-rooks",
+    "name": "Finish a ladder checkmate",
+    "fen": "8/7k/8/8/8/4K3/R7/6R1 w - - 2 2",
+    "tip": "Use the king and your remaining pieces to finish this position. Use the rooks together to cut off ranks or files, gradually pushing the king to the edge.",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "finish-two-bishops",
+    "name": "Finish a bishop checkmate",
+    "fen": "6k1/6B1/6K1/8/4B3/8/8/8 w - - 6 4",
+    "tip": "Use the king and your remaining pieces to finish this position. Use the bishops together to push the king toward a corner. Bring your king close to take away escape squares, then deliver mate.",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "finish-queen-vs-pawn",
+    "name": "Find the final queen check",
+    "fen": "7k/3Q4/5K2/8/8/6p1/8/8 w - - 0 6",
+    "tip": "Use the king and your remaining pieces to finish this position. Stop the pawn from promoting while bringing your king closer. Watch for checks and stalemate.",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "finish-outside-passer",
+    "name": "Queen and king teamwork",
+    "fen": "8/8/6Q1/8/7k/4K3/8/8 w - - 9 8",
+    "tip": "Use the king and your remaining pieces to finish this position. Use your king to keep the opposing king away, then advance the outside pawn. Promote safely before going for checkmate.",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "finish-connected-pawns",
+    "name": "Finish after promotion",
+    "fen": "8/1Q1P4/4K3/8/8/8/k7/8 w - - 1 13",
+    "tip": "Use the king and your remaining pieces to finish this position. Keep your king close enough to protect both connected pawns. Advance them together so the enemy king cannot stop both.",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "finish-pawn-race",
+    "name": "Rook after promotion",
+    "fen": "3R4/7k/5K2/8/8/8/8/8 w - - 1 4",
+    "tip": "Use the king and your remaining pieces to finish this position. Keep your king in front of the pawn when it needs protection. Reach the last rank, promote, then finish with checkmate.",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "finish-rook-and-pawn",
+    "name": "Promote with rook support",
+    "fen": "6k1/4R3/3P4/8/4K3/8/8/8 w - - 1 4",
+    "tip": "Use the king and your remaining pieces to finish this position. Use your rook to cut off the enemy king, and bring your king forward to support the pawn.",
+    "difficulty": "Easy"
+  },
+  {
+    "id": "queen-box",
+    "name": "King & queen",
+    "fen": "7k/8/5K2/8/4Q3/8/8/8 w - - 0 1",
+    "tip": "Use your queen to shrink the king’s space. Bring your king closer, then give mate. Leave a legal move if you are not giving check.",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "two-rooks",
+    "name": "Mate with two rooks",
+    "fen": "7k/8/8/8/8/4K3/8/R5R1 w - - 0 1",
+    "tip": "Use the rooks together to cut off ranks or files, gradually pushing the king to the edge.",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "rook-box",
+    "name": "King & rook",
+    "fen": "7k/8/5K2/8/8/8/8/R7 w - - 0 1",
+    "tip": "Use your rook to cut off a rank or file. Bring your king close enough to cover escape squares, then check along the edge.",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "outside-passer",
+    "name": "Race an outside passer",
+    "fen": "8/8/7k/P7/3K4/8/8/8 w - - 0 1",
+    "tip": "Use your king to keep the opposing king away, then advance the outside pawn. Promote safely before going for checkmate.",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "pawn-race",
+    "name": "Promote a pawn",
+    "fen": "6k1/8/3PK3/8/8/8/8/8 w - - 0 1",
+    "tip": "Keep your king in front of the pawn when it needs protection. Reach the last rank, promote, then finish with checkmate.",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "rook-and-pawn",
+    "name": "Rook and passed pawn",
+    "fen": "7k/8/8/3P4/4K3/8/8/R7 w - - 0 1",
+    "tip": "Use your rook to cut off the enemy king, and bring your king forward to support the pawn.",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "queen-vs-pawn",
+    "name": "Queen against a pawn",
+    "fen": "7k/8/6p1/8/8/3K4/8/3Q4 w - - 0 1",
+    "tip": "Stop the pawn from promoting while bringing your king closer. Watch for checks and stalemate.",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "connected-pawns",
+    "name": "Advance connected passers",
+    "fen": "8/4k3/8/2PP4/3K4/8/8/8 w - - 0 1",
+    "tip": "Keep your king close enough to protect both connected pawns. Advance them together so the enemy king cannot stop both.",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "pawn-opposition",
+    "name": "King and pawn opposition",
+    "fen": "8/8/4k3/8/4K3/4P3/8/8 w - - 0 1",
+    "tip": "Use your king to claim key squares ahead of the pawn. Look for a way to gain the opposition.",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "two-bishops",
+    "name": "Mate with two bishops",
+    "fen": "7k/8/5K2/8/4B3/8/8/2B5 w - - 0 1",
+    "tip": "Use the bishops together to push the king toward a corner. Bring your king close to take away escape squares, then deliver mate.",
+    "difficulty": "Expert"
+  }
 ];
 export function gameFrom(record,limit=record.moves.length){const c=record.fen?new Chess(record.fen):new Chess();for(const m of record.moves.slice(0,limit))c.move(m);return c}
 export function settleClock(m,now=Date.now()){if(!m||!m.clock||m.paused||m.result||!m.runningSince)return false;const side=m.turn||'w';m.clock[side]=Math.max(0,m.clock[side]-(now-m.runningSince)/1000);m.runningSince=now;if(m.clock[side]===0){const c=gameFrom(m);const winner=side==='w'?'b':'w';const bareKing=c.board().flat().filter(Boolean).filter(p=>p.color===winner).every(p=>p.type==='k');m.result=bareKing?'draw':side==='w'?'loss':'win';m.reason=bareKing?'Time expired; opponent has only a king':'Time expired';return true}return false}
