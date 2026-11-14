@@ -1,3 +1,4 @@
+let reviewDrawMode=false,reviewArrowGesture=null;const reviewDrawings=new Map();
 let liveHistoryStep=null;
 import {autoStartingState} from './auto-profile.js?v=20261114-1';
 let demonstrationSpeed=1;try{const speed=Number(localStorage.getItem('chess-demonstration-speed'));if([.5,1,1.5,2].includes(speed))demonstrationSpeed=speed}catch{}
@@ -149,12 +150,13 @@ function gamesPage(){
   const previousColor=previousIndex>=0?summary.rows[previousIndex].color:'w';
   const shownAnalysis=analysis||previousAnalysis;
   const shownColor=analysis?r?.color:previousColor;
+  const suggestion=reviewSuggestion(c,gameStep===0?g.startingAnalysis:analysis);
   const ev=gameStep===0?evaluation({engine:'search',actualScore:0,actualMate:null},'w'):evaluation(shownAnalysis,shownColor);
-  return `<div class="review-room"><div class="row wrap"><button class="button secondary" id="all-games">All games</button><h2>Move ${gameStep} of ${g.moves.length}</h2><button class="button primary" id="complete-review">Mark reviewed</button></div><div class="review-layout simple-review"><div><div class="review-board-with-eval"><div class="eval-column" role="img" aria-label="${esc(ev.description)}: ${ev.text}"><span class="eval-number">${ev.text}</span><div class="eval-track"><div class="eval-white" style="height:${ev.white}%"></div></div><small>White</small></div><div class="game-board">${boardHTML(c,{staticBoard:true,last:r})}</div></div><div class="row wrap section-space"><button class="button secondary" id="game-prev" ${gameStep===0?'disabled':''}>Previous move</button><button class="button primary" id="game-next" ${gameStep===g.moves.length?'disabled':''}>Next move</button></div></div></div></div>`
+  return `<div class="review-room"><div class="row wrap"><button class="button secondary" id="all-games">All games</button><h2>Move ${gameStep} of ${g.moves.length}</h2><button class="button primary" id="complete-review">Mark reviewed</button></div><div class="review-layout simple-review"><div><div class="review-board-with-eval"><div class="eval-column" role="img" aria-label="${esc(ev.description)}: ${ev.text}"><span class="eval-number">${ev.text}</span><div class="eval-track"><div class="eval-white" style="height:${ev.white}%"></div></div><small>White</small></div><div class="game-board review-arrow-board">${boardHTML(c,{staticBoard:true,last:r})}${reviewArrowsHTML(suggestion)}</div></div><p class="fine" role="status">${suggestion?'Best move here: <b>'+esc(suggestion.san)+'</b> · green arrow':c.isGameOver()?'Game over':'Finding the best move…'}</p><div class="row wrap"><button class="button secondary small" id="review-draw-mode" aria-pressed="${reviewDrawMode}">${reviewDrawMode?'Drawing arrows: on':'Draw arrows'}</button><button class="button secondary small" id="review-clear-arrows">Clear my arrows</button>${gameStep>0?'<button class="button secondary small" id="review-alternative">What should have been played?</button>':''}</div><p class="fine muted">Right-click and drag to draw an arrow. Right-click a square to mark it. On touch screens, turn on Draw arrows first.</p><div class="row wrap section-space"><button class="button secondary" id="game-prev" ${gameStep===0?'disabled':''}>Previous move</button><button class="button primary" id="game-next" ${gameStep===g.moves.length?'disabled':''}>Next move</button></div></div></div></div>`
 }
 function cancelReviewAnalysis(){if(analysisBusy)reviewAttempts.delete(reviewGameIndex+':'+analysisStep);analysisToken++;analysisWorker?.terminate();analysisWorker=null;analysisBusy=false;analysisStep=0}
 function startReviewAnalysis(gameIndex,step,chain=true,mode='quick'){
-  const g=state.games?.[gameIndex],rows=g?moveNotes(g):[],row=rows[step-1];
+  const g=state.games?.[gameIndex],rows=g?moveNotes(g):[],row=step===0?{fen:gameFrom(g,0).fen()}:rows[step-1];
   if(!g||!row||analysisBusy)return;
   const key=gameIndex+':'+step;
   reviewAttempts.add(key);analysisBusy=true;analysisStep=step;analysisMode=mode;
@@ -164,7 +166,7 @@ function startReviewAnalysis(gameIndex,step,chain=true,mode='quick'){
     if(data.id!==analysisToken)return;
     analysisBusy=false;analysisWorker.terminate();analysisWorker=null;
     if(data.error)toast('Analysis could not finish. Try again.');
-    else{g.analysis||=[];g.analysis[step-1]={...data,reviewQuality:mode,analyzedAt:Date.now()};save()}
+    else{g.analysis||=[];const result={...data,reviewQuality:mode,analyzedAt:Date.now()};if(step===0)g.startingAnalysis=result;else g.analysis[step-1]=result;save()}
     if(view==='games'&&reviewGameIndex===gameIndex)render();
     if(chain)queueReviewAnalysis(gameIndex);
   };
@@ -185,21 +187,21 @@ function queueReviewAnalysis(gameIndex){
   if(currentKey!==reviewIdleKey){
     clearTimeout(reviewIdleTimer);reviewIdleKey=currentKey;
     if(analysisBusy&&analysisStep!==gameStep)cancelReviewAnalysis();
-    if(gameStep>0){const targetStep=gameStep;reviewIdleTimer=setTimeout(()=>{
+    if(gameStep>=0){const targetStep=gameStep;reviewIdleTimer=setTimeout(()=>{
       if(view!=='games'||reviewGameIndex!==gameIndex||gameStep!==targetStep)return;
-      const cached=g.analysis?.[targetStep-1];
+      const cached=targetStep===0?g.startingAnalysis:g.analysis?.[targetStep-1];
       if(cached?.reviewVersion===3&&cached.reviewQuality==='deep')return;
       if(analysisBusy)cancelReviewAnalysis();
       startReviewAnalysis(gameIndex,targetStep,true,'deep');
     },750)}
   }
   if(analysisBusy)return;
-  for(const step of [...new Set([gameStep,...Array.from({length:g.moves.length},(_,i)=>i+1)])].filter(n=>n>0)){
-    const cached=g.analysis?.[step-1],key=gameIndex+':'+step;
+  for(const step of [...new Set([gameStep,...Array.from({length:g.moves.length},(_,i)=>i+1)])].filter(n=>n>=0)){
+    const cached=step===0?g.startingAnalysis:g.analysis?.[step-1],key=gameIndex+':'+step;
     if(cached?.reviewVersion!==3&&!reviewAttempts.has(key)){startReviewAnalysis(gameIndex,step,true,'quick');return}
   }
 }
-function bindReview(){
+function bindReview(){if($('#review-draw-mode'))$('#review-draw-mode').onclick=()=>{reviewDrawMode=!reviewDrawMode;render()};if($('#review-clear-arrows'))$('#review-clear-arrows').onclick=()=>{reviewDrawings.delete(reviewDrawingKey());render()};if($('#review-alternative'))$('#review-alternative').onclick=()=>{gameStep=Math.max(0,gameStep-1);render()};
   $$('[data-open-game]').forEach(b=>b.onclick=()=>{cancelReviewAnalysis();clearTimeout(reviewIdleTimer);reviewIdleKey='';reviewAttempts.clear();reviewGameIndex=Number(b.dataset.openGame);gameStep=0;go('games')});
   if($('#all-games'))$('#all-games').onclick=()=>{cancelReviewAnalysis();reviewGameIndex=null;render()};
   if($('#game-prev'))$('#game-prev').onclick=()=>{gameStep--;render()};
@@ -221,7 +223,7 @@ let dragGesture=null,suppressBoardClick=false,dragDropInProgress=false;
 document.addEventListener('pointerdown',e=>{if(e.button===2&&dragGesture){e.preventDefault();cancelPieceDrag();return}if(dragGesture||e.isPrimary===false)return;const square=e.target.closest('.square[data-square]');if(!square||e.button!==0||!square.querySelector('img'))return;const game=view==='game'&&state.match?premoveBoard(state.match):view==='training'&&state.active?activeGame():view==='learn'&&lessonState?.phase==='try'&&!lessonState.waiting?lessonBoard():null;if(!game)return;const color=view==='game'||view==='learn'?'w':new Chess(puzzleMap.get(state.active.puzzle.id).fen).turn();if(game.get(square.dataset.square)?.color!==color)return;const image=square.querySelector('img'),rect=image.getBoundingClientRect();dragGesture={image:image.cloneNode(),width:rect.width,offsetX:e.clientX-(rect.left+rect.width/2),offsetY:e.clientY-(rect.top+rect.height/2),from:square.dataset.square,piece:game.get(square.dataset.square).type,x:e.clientX,y:e.clientY,board:square.closest('.board'),square,pointer:e.pointerId};square.setPointerCapture(e.pointerId);});
 document.addEventListener('pointermove',e=>{const d=dragGesture;if(!d||d.pointer!==e.pointerId)return;if(!d.ghost&&Math.hypot(e.clientX-d.x,e.clientY-d.y)>6){d.ghost=d.image;d.ghost.className='drag-piece';d.ghost.style.width=d.width+'px';document.body.append(d.ghost);d.square.classList.add('drag-origin')}if(d.ghost){e.preventDefault();d.ghost.style.left=(e.clientX-d.offsetX)+'px';d.ghost.style.top=(e.clientY-d.offsetY)+'px';}},{passive:false});
 function cancelPieceDrag(){clearDrag();gameSelection=null;selectedSquare=null;suppressBoardClick=true;setTimeout(()=>suppressBoardClick=false,0);if(view==='game'&&state.match){clearPremoves(state.match);save()}render()}
-document.addEventListener('contextmenu',event=>{if(dragGesture||event.target.closest?.('.board')){event.preventDefault();cancelPieceDrag()}},true);
+document.addEventListener('contextmenu',event=>{if(event.target.closest?.('.review-arrow-board')){event.preventDefault();return}if(dragGesture||event.target.closest?.('.board')){event.preventDefault();cancelPieceDrag()}},true);
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&dragGesture){event.preventDefault();cancelPieceDrag()}});
 function clearDrag(){const d=dragGesture;dragGesture=null;if(d){d.ghost?.remove();d.square.classList.remove('drag-origin');if(d.square.hasPointerCapture(d.pointer))d.square.releasePointerCapture(d.pointer)}return d;}
 document.addEventListener('pointerup',e=>{if(!dragGesture||dragGesture.pointer!==e.pointerId)return;const d=clearDrag();if(!d?.ghost)return;suppressBoardClick=true;setTimeout(()=>suppressBoardClick=false,0);const destination=document.elementFromPoint(e.clientX,e.clientY)?.closest('.square[data-square]');if(!destination||destination.closest('.board')!==d.board||destination.dataset.square===d.from)return;dragDropInProgress=true;try{if(view==='game'){gameSelection=d.from;handleGameSquare(destination.dataset.square)}else{selectedSquare=d.from;destination.onclick?.();}}finally{dragDropInProgress=false}});
@@ -275,3 +277,14 @@ function renderGameDuringDrag(){
 }
 
 window.addEventListener('resize',()=>{if(layoutMode==='auto')applyLayoutMode()},{passive:true});
+
+function reviewSuggestion(c,analysis){if(!analysis?.move)return null;try{const check=new Chess(c.fen()),move=check.move(analysis.move);return move?{from:move.from,to:move.to,san:move.san}:null}catch{return null}}
+function reviewDrawingKey(){return reviewGameIndex+':'+gameStep}
+function reviewArrowShape(from,to,color){const point=sq=>[('abcdefgh'.indexOf(sq[0])+.5)*100,(8-Number(sq[1])+.5)*100],a=point(from),b=point(to);if(from===to)return `<circle cx="${a[0]}" cy="${a[1]}" r="39" fill="none" stroke="${color}" stroke-width="10"/>`;const angle=Math.atan2(b[1]-a[1],b[0]-a[0]),ux=Math.cos(angle),uy=Math.sin(angle),x=b[0]-ux*28,y=b[1]-uy*28;return `<path d="M${a[0]},${a[1]} L${x},${y}" fill="none" stroke="${color}" stroke-width="17" stroke-linecap="round"/><polygon points="${b[0]},${b[1]} ${x-uy*24},${y+ux*24} ${x+uy*24},${y-ux*24}" fill="${color}"/>`}
+function reviewArrowsHTML(suggestion){const drawings=reviewDrawings.get(reviewDrawingKey())||[],preview=reviewArrowGesture?.key===reviewDrawingKey()?reviewArrowGesture:null;return `<svg class="review-arrows" viewBox="0 0 800 800" aria-hidden="true">${suggestion?reviewArrowShape(suggestion.from,suggestion.to,'#42a34f'):''}${drawings.map(a=>reviewArrowShape(a.from,a.to,'#e49625')).join('')}${preview?reviewArrowShape(preview.from,preview.to,'#e49625'):''}</svg>`}
+function refreshReviewArrows(){const board=$('.review-arrow-board'),g=state.games?.[reviewGameIndex];if(!board||!g)return;const c=gameFrom(g,gameStep),analysis=gameStep===0?g.startingAnalysis:g.analysis?.[gameStep-1];board.querySelector('.review-arrows')?.remove();board.insertAdjacentHTML('beforeend',reviewArrowsHTML(reviewSuggestion(c,analysis)))}
+function reviewPointerSquare(event){const el=document.elementFromPoint(event.clientX,event.clientY)?.closest('.review-arrow-board .square');return el?.getAttribute('aria-label')?.slice(0,2)}
+document.addEventListener('pointerdown',event=>{if(view!=='games'||reviewGameIndex==null||!(event.button===2||reviewDrawMode&&event.button===0))return;const from=reviewPointerSquare(event);if(!from)return;event.preventDefault();reviewArrowGesture={from,to:from,key:reviewDrawingKey(),pointer:event.pointerId};refreshReviewArrows()});
+document.addEventListener('pointermove',event=>{if(!reviewArrowGesture||event.pointerId!==reviewArrowGesture.pointer)return;event.preventDefault();const to=reviewPointerSquare(event);if(to){reviewArrowGesture.to=to;refreshReviewArrows()}},{passive:false});
+document.addEventListener('pointerup',event=>{const gesture=reviewArrowGesture;if(!gesture||event.pointerId!==gesture.pointer)return;reviewArrowGesture=null;if(gesture.key!==reviewDrawingKey()||view!=='games')return;const to=reviewPointerSquare(event);if(to){const arrows=reviewDrawings.get(gesture.key)||[],index=arrows.findIndex(a=>a.from===gesture.from&&a.to===to);if(index>=0)arrows.splice(index,1);else arrows.push({from:gesture.from,to});reviewDrawings.set(gesture.key,arrows)}refreshReviewArrows()});
+document.addEventListener('pointercancel',()=>{reviewArrowGesture=null;refreshReviewArrows()});
