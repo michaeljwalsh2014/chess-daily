@@ -111,3 +111,4 @@ body[data-board-theme=forest] .square{background:#ebefdf}body[data-board-theme=f
 /* Castle Guard art includes transparent padding; fill more of each square. */
 body[data-piece-theme=castle] .board .piece-img{width:120%;height:120%;max-width:none;flex:none}
 body[data-piece-theme=castle] .settings-preview img{width:120%;height:120%;max-width:none;flex:none}
+.arena-same-bot{display:flex!important;align-items:center;gap:10px;cursor:pointer}.arena-same-bot input{width:20px;height:20px;accent-color:var(--green)}.arena-setup .form-field[hidden]{display:none}
