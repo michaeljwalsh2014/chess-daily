@@ -145,3 +145,11 @@ body{background:radial-gradient(ellipse at 8% 0%,#dce8ed80,transparent 45%),radi
 .game-clock.running{background:linear-gradient(135deg,#e5eef3,#edf1ed);border-color:#88a2b3}.settings-heading h2{color:#29465d}
 
 .progress-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.progress-card{display:flex;flex-direction:column;align-items:flex-start}.progress-card p{margin:8px 0}.progress-card .button{margin-top:12px}.progress-number{font-size:clamp(38px,5vw,58px);font-weight:750;line-height:1.1;margin-top:14px;color:var(--deep)}.progress-simple details>summary{cursor:pointer;font-size:1.1em}.progress-simple details[open]>summary{margin-bottom:14px}@media(max-width:700px){.progress-overview{grid-template-columns:1fr}}
+
+/* White canvas with clearer blue actions. */
+:root{--paper:#fff}
+body{background:#fff}
+.button.secondary,.global-settings{background:#eaf2fa;color:#244f75;border-color:#bdd1e5;box-shadow:0 3px 10px #263f5908}
+.button.secondary:hover,.global-settings:hover{background:#dceaf7;border-color:#8eb1d2}
+.button.quiet{background:#edf4fb;color:#285779}
+.filters button{background:#edf4fb;color:#285779;border-color:#c5d8e9}.filters button.active{background:#305d82;color:#fff}
