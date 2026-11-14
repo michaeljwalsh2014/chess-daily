@@ -7,6 +7,10 @@ export const ENDGAMES=[
 {id:'pawn-race',name:'Promote a pawn',fen:'6k1/8/3PK3/8/8/8/8/8 w - - 0 1',tip:'Keep your king in front of the pawn when it needs protection. Reach the last rank, promote, then finish with checkmate.'},
 {id:'two-bishops',name:'Mate with two bishops',fen:'7k/8/5K2/8/4B3/8/8/2B5 w - - 0 1',tip:'Use the bishops together to push the king toward a corner. Bring your king close to take away escape squares, then deliver mate.'},
 {id:'connected-pawns',name:'Advance connected passers',fen:'8/4k3/8/2PP4/3K4/8/8/8 w - - 0 1',tip:'Keep your king close enough to protect both connected pawns. Advance them together so the enemy king cannot stop both.'},
+{id:'two-rooks',name:'Mate with two rooks',fen:'7k/8/8/8/8/4K3/8/R5R1 w - - 0 1',tip:'Use the rooks together to cut off ranks or files, gradually pushing the king to the edge.'},
+{id:'queen-vs-pawn',name:'Queen against a pawn',fen:'7k/8/6p1/8/8/3K4/8/3Q4 w - - 0 1',tip:'Stop the pawn from promoting while bringing your king closer. Watch for checks and stalemate.'},
+{id:'rook-and-pawn',name:'Rook and passed pawn',fen:'7k/8/8/3P4/4K3/8/8/R7 w - - 0 1',tip:'Use your rook to cut off the enemy king, and bring your king forward to support the pawn.'},
+{id:'pawn-opposition',name:'King and pawn opposition',fen:'8/8/4k3/8/4K3/4P3/8/8 w - - 0 1',tip:'Use your king to claim key squares ahead of the pawn. Look for a way to gain the opposition.'},
 {id:'outside-passer',name:'Race an outside passer',fen:'8/8/7k/P7/3K4/8/8/8 w - - 0 1',tip:'Use your king to keep the opposing king away, then advance the outside pawn. Promote safely before going for checkmate.'}
 ];
 export function gameFrom(record,limit=record.moves.length){const c=record.fen?new Chess(record.fen):new Chess();for(const m of record.moves.slice(0,limit))c.move(m);return c}
