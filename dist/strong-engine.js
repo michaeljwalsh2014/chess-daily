@@ -60,8 +60,8 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
             const pool=complete?complete[1]:candidates;
             const best = pool.get(1);
             if (best) {
-              const target = 220 * (1 - data.autoStrength);
-              const choices = [...pool.values()].filter(c => c.depth === best.depth && best.score-c.score >= 0 && best.score-c.score <= 220);
+              const target = 380 * (1 - data.autoStrength) ** 1.5;
+              const choices = [...pool.values()].filter(c => c.depth === best.depth && best.score-c.score >= 0 && best.score-c.score <= 400);
               choices.sort((a,b)=>Math.abs(best.score-a.score-target)-Math.abs(best.score-b.score-target));
               if (choices.length) code = choices[0].code;
             }

@@ -1,5 +1,5 @@
 import {Chess} from './vendor/chess.js';
-import {stockfishMove} from './strong-engine.js?v=20261114-26';
+import {stockfishMove} from './strong-engine.js?v=20261114-30';
 
 export function adaptAuto(previous, loss, autoAdvantage = 0) {
   const strength = Math.max(0, Math.min(1, Number(previous?.strength ?? 0.15)));
@@ -7,13 +7,14 @@ export function adaptAuto(previous, loss, autoAdvantage = 0) {
   if (!Number.isFinite(loss)) return {strength, samples};
   // Smooth recent move quality; one blunder never changes the whole personality.
   const quality = Math.max(0, Math.min(1, 1 - Math.max(0, loss) / 220));
-  const average = samples ? previous.average * 0.75 + quality * 0.25 : quality;
+  const average = samples ? (Number.isFinite(previous.average)?previous.average:quality) * 0.55 + quality * 0.45 : quality;
   // Stockfish scores from the side to move: a positive after-score means Auto
   // is ahead. Ease off when winning; defend more accurately when behind.
-  const balanceTarget = Math.max(0.08, Math.min(0.92, 0.24 - Math.tanh((autoAdvantage + 50) / 230) * 0.2));
-  const moveQualityTarget = Math.max(0.08, Math.min(0.92, average * 0.65));
-  const target = balanceTarget * 0.75 + moveQualityTarget * 0.25;
-  return {strength: strength + Math.max(-0.1, Math.min(0.1, (target-strength)*0.35)), average, samples:samples+1};
+  const baseline = Math.max(.05,Math.min(.9,Number(previous?.baseline ?? .2)));
+  const qualityTarget = Math.max(.05,Math.min(.95,average*.9));
+  const balance = Math.tanh(autoAdvantage/220);
+  const target = Math.max(.03,Math.min(.97,baseline*.4+qualityTarget*.6-balance*.38));
+  return {...previous,strength: strength + Math.max(-.1, Math.min(.1, (target-strength)*.65)), baseline, average, samples:samples+1};
 }
 
 export async function autoMove(data, run = stockfishMove) {
