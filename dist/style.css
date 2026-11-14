@@ -141,3 +141,5 @@ body[data-piece-theme=castle] .settings-preview img{width:120%;height:120%;max-w
 .button.secondary:hover,.global-settings:hover{background:#eef5e5;border-color:#a9c58b}
 .device-switch button[aria-pressed="true"]{background:#e7f0db;color:#3d6123}
 .badge{background:#e8f1dc;color:#496d2b}.coach-note{background:#f0f6e8;border-color:#dae7cc}.game-clock.running{background:#eaf3df;border-color:#91b567}
+
+.game-clock.low-time,.game-clock.running.low-time{background:#fff0e8;border:2px solid #b64024;color:#8a2716}.game-clock.low-time b{color:#a92e19}.game-clock #player-time-warning{font-size:.78em;font-weight:750;color:#a92e19}.game-clock #player-time-warning:not([hidden]){display:block}
