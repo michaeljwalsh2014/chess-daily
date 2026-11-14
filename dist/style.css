@@ -58,3 +58,31 @@ body.layout-computer .simple-home{width:100%;max-width:1500px}.layout-computer .
 /* Keep long bot names and precise clocks inside the Arena sidebar on tablets. */
 .arena-clocks{grid-template-columns:repeat(2,minmax(0,1fr));min-width:0;align-items:stretch}.arena-clocks .game-clock{min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:6px;padding:10px}.arena-clocks .game-clock span{max-width:100%;overflow-wrap:anywhere;line-height:1.35}.arena-clocks .game-clock b{display:block;white-space:nowrap;font-size:clamp(18px,2.2vw,25px);font-variant-numeric:tabular-nums;line-height:1.2}
 @media(min-width:761px) and (max-width:1180px){body.computer-playing:not(.layout-iphone) .arena-room{grid-template-columns:minmax(0,1fr) minmax(240px,28vw);gap:10px 12px}body.computer-playing:not(.layout-iphone) .arena-clocks{width:100%;gap:6px}.arena-clocks .game-clock span{font-size:11px}.arena-clocks .game-clock b{font-size:19px}}
+
+/* iPad games occupy the visible viewport; reserve the bottom row for actions. */
+html:has(body.ipad-game){height:100%;overflow:hidden;overscroll-behavior:none}
+body.layout-ipad.ipad-game{position:fixed;inset:0;height:100dvh;overflow:hidden;overscroll-behavior:none}
+body.layout-ipad.ipad-game .app-shell{width:100%;height:100%;max-width:none;margin:0;overflow:hidden}
+body.layout-ipad.ipad-game .sidebar,body.layout-ipad.ipad-game .topbar,body.layout-ipad.ipad-game .primary-nav,body.layout-ipad.ipad-game footer{display:none}
+body.layout-ipad.ipad-game main{position:absolute;inset:0;width:100%;height:100%;min-height:0;max-width:none;margin:0;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));overflow:hidden;display:flex}
+body.layout-ipad.ipad-game #content{width:100%;height:100%;min-height:0;padding:0!important;overflow:hidden}
+body.layout-ipad.ipad-game .game-room{container-type:size;height:100%;width:100%;max-width:none;min-height:0;margin:0;display:grid;grid-template-columns:minmax(0,1fr) 200px;grid-template-rows:auto auto minmax(0,1fr) auto 96px;gap:8px 12px;overflow:hidden}
+body.layout-ipad.ipad-game .game-room>.row:first-child{grid-column:2;grid-row:1;gap:6px;margin:0;font-size:12px}
+body.layout-ipad.ipad-game .game-clocks{grid-column:2;grid-row:2;grid-template-columns:1fr;gap:6px;margin:0}
+body.layout-ipad.ipad-game .game-clock{padding:6px 10px;min-width:0}
+body.layout-ipad.ipad-game .game-clock b{font-size:22px}
+body.layout-ipad.ipad-game .game-status{grid-column:2;grid-row:4;gap:4px;margin:0;font-size:12px}
+body.layout-ipad.ipad-game .game-status h2{font-size:16px;margin:0}
+body.layout-ipad.ipad-game .game-status>.fine{display:none}
+body.layout-ipad.ipad-game .game-board{grid-column:1;grid-row:1/5;width:min(calc(100cqw - 212px),calc(100cqh - 128px));min-width:0;max-width:100%;height:auto;max-height:none;aspect-ratio:1;margin:auto;align-self:center;touch-action:none}
+body.layout-ipad.ipad-game .game-board>.board{width:100%;height:100%;max-width:none;aspect-ratio:1;touch-action:none}
+body.layout-ipad.ipad-game .square{touch-action:none}
+body.layout-ipad.ipad-game .live-moves{grid-column:2;grid-row:3;min-height:0;height:100%;margin:0;padding:8px;display:flex;flex-direction:column;overflow:hidden}
+body.layout-ipad.ipad-game .live-moves-scroll{flex:1;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain}
+body.layout-ipad.ipad-game .live-move-row{grid-template-columns:24px 1fr 1fr;gap:4px;padding:3px;font-size:12px}
+body.layout-ipad.ipad-game .game-actions{grid-column:1/-1;grid-row:5;min-height:0;margin:0;gap:8px;justify-content:center;align-content:center;align-self:stretch;border-top:1px solid var(--line)}
+body.layout-ipad.ipad-game .game-actions>.fine:not([role=status]){display:none}
+body.layout-ipad.ipad-game .game-actions .button,body.layout-ipad.ipad-game .game-room>.row:first-child .button{min-height:44px;padding:8px 12px;font-size:13px}
+body.layout-ipad.ipad-game .game-help{display:none}
+body.layout-ipad.ipad-game .endgame-tip{position:absolute;right:10px;bottom:108px;width:200px;max-height:160px;overflow:auto;background:var(--paper);z-index:5;margin:0;padding:6px;font-size:12px}
+@media(max-width:600px){body.layout-ipad.ipad-game .game-room{grid-template-columns:minmax(0,1fr) 150px}body.layout-ipad.ipad-game .game-board{width:min(calc(100cqw - 162px),calc(100cqh - 128px))}body.layout-ipad.ipad-game .game-clock span{font-size:10px}}
