@@ -90,3 +90,5 @@ body.layout-ipad.ipad-game .endgame-tip{position:absolute;right:10px;bottom:108p
 /* Comfortable, consistent controls and readable desktop text. */
 .button{border-radius:12px;letter-spacing:.01em}.button.secondary{box-shadow:0 2px 8px #203d3110}.button:active{transform:translateY(1px)}
 body.layout-computer{font-size:17px}body.layout-computer .fine{font-size:15px}body.layout-computer .button,body.layout-computer .form-field{font-size:16px}body.layout-computer .bot-picker-details summary,body.layout-computer .bot-picker-option{font-size:16px}body.layout-computer .game-clock span,body.layout-computer .game-actions>.fine{font-size:14px}body.layout-computer .game-status h2{font-size:21px}body.layout-computer .device-switch button{font-size:13px}
+
+.square:has(.piece-img){isolation:isolate}.piece-img{position:relative;z-index:1}
