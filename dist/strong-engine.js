@@ -9,6 +9,7 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
     const budget = Math.max(5, Math.floor(Number(data.budget ?? data.thinkMs) || 2200));
     const timer = setTimeout(() => finish(new Error('Stockfish did not respond. Please retry.')), budget + 15000);
     let depth = 0, nodes = 0, score = 0, mate = null;
+    const candidates = new Map();
     function finish(error, result) {
       clearTimeout(timer);
       worker.terminate();
@@ -23,6 +24,10 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
           const bareKing = ['w', 'b'].some(color => pieces.filter(p => p.color === color).every(p => p.type === 'k'));
           worker.postMessage(`setoption name UCI_LimitStrength value ${data.review || bareKing || Number(data.level) === 7 ? 'false' : 'true'}`);
           worker.postMessage(`setoption name UCI_Elo value ${Number(data.level) === 5 ? 2100 : 1800}`);
+          if (data.autoStrength != null) {
+            worker.postMessage('setoption name UCI_LimitStrength value false');
+            worker.postMessage('setoption name MultiPV value 8');
+          }
           worker.postMessage('isready');
         } else if (line === 'readyok') {
           // Restore history so the engine sees repetitions and the fifty-move clock.
@@ -38,6 +43,9 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
           worker.postMessage(position);
           worker.postMessage(`go movetime ${budget}`);
         } else if (line.startsWith('info ')) {
+          const candidate = line.match(/\bscore cp (-?\d+).*\bpv ([a-h][1-8][a-h][1-8][qrbn]?)/);
+          const rank = Number(line.match(/\bmultipv (\d+)/)?.[1] || 1);
+          if (candidate && !/lowerbound|upperbound/.test(line)) candidates.set(rank,{score:Number(candidate[1]),code:candidate[2],depth:Number(line.match(/\bdepth (\d+)/)?.[1] || 0)});
           depth = Number(line.match(/\bdepth (\d+)/)?.[1]) || depth;
           nodes = Number(line.match(/\bnodes (\d+)/)?.[1]) || nodes;
           const cp = line.match(/\bscore cp (-?\d+)/);
@@ -45,7 +53,16 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
           const m = line.match(/\bscore mate (-?\d+)/);
           if (m) { mate = Number(m[1]); score = Math.sign(mate || -1) * 100000; }
         } else if (line.startsWith('bestmove ')) {
-          const code = line.split(/\s+/)[1];
+          let code = line.split(/\s+/)[1];
+          if (data.autoStrength != null && candidates.size) {
+            const best = candidates.get(1);
+            if (best) {
+              const target = 220 * (1 - data.autoStrength) ** 2;
+              const choices = [...candidates.values()].filter(c => c.depth === best.depth && best.score-c.score >= 0 && best.score-c.score <= 300);
+              choices.sort((a,b)=>Math.abs(best.score-a.score-target)-Math.abs(best.score-b.score-target));
+              if (choices.length) code = choices[0].code;
+            }
+          }
           try {
             const move = { from: code.slice(0, 2), to: code.slice(2, 4), ...(code.length === 5 ? { promotion: code[4] } : {}) };
             const played = chess.move(move);

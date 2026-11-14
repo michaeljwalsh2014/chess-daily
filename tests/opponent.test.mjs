@@ -76,3 +76,11 @@ test('unrestricted review sees the forced loss before the opponent delivers it',
  const r=await stockfishMove({fen:c.fen(),review:true,budget:500},nativeWorker);
  assert.equal(r.mate,1);assert.ok(-r.score < -90000);
 });
+
+test('Auto returns legal moves at forgiving and challenging settings',async()=>{
+ for(const autoStrength of [0.1,0.9]){
+  const c=new Chess();c.move('e4');
+  const r=await stockfishMove({fen:c.fen(),level:8,autoStrength,budget:300},nativeWorker);
+  assert.ok(c.move(r.move));
+ }
+});

@@ -28,3 +28,5 @@ New puzzle selection excludes seen puzzle IDs and piece-placement/side-to-move c
 Run `node --test tests/*.test.mjs`. The app is buildless; serve `dist/` as static files. Hosting identity is preserved in `.openai/hosting.json`.
 
 Hyper Bullet Bot 3.0 uses unrestricted bundled Stockfish: up to 800 ms above 30 seconds, 120–240 ms between 15 and 30 seconds, and 5–35 ms below 15 seconds. It has no artificial delay. Hyper Bullet Bot 2.0 retains the original local engine.
+
+Auto uses recent move quality to adjust its challenge gradually within each game. Two short unrestricted Stockfish searches estimate the opponent's latest move loss, then a smoothed adjustment controls selection among eight candidate replies. Accurate play raises the challenge and repeated mistakes ease it; no win rate or rating is guaranteed. The adjustment is saved with unfinished player games, kept separately by color in Arena, and resets for a new game. With very short search budgets Auto skips the extra assessment and retains its current setting. The selector reads “Automatically adjusts to your level”.

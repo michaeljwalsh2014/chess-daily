@@ -1,8 +1,13 @@
-import { stockfishMove } from './strong-engine.js?v=20261114-3';
-import { chooseMove } from './engine-core.js?v=20261114-3';
+import {autoMove} from './auto-engine.js?v=20261114-4';
+import { stockfishMove } from './strong-engine.js?v=20261114-4';
+import { chooseMove } from './engine-core.js?v=20261114-4';
 
 self.onmessage = ({ data }) => {
   try {
+    if (Number(data.level) === 8 && !data.review) {
+      autoMove(data).then(result=>self.postMessage({id:data.id,...result})).catch(error=>self.postMessage({id:data.id,error:true,message:error.message}));
+      return;
+    }
     if (data.review) {
       stockfishMove(data).then(result => self.postMessage({ id: data.id, ...result, actualScore: -result.score, actualMate: result.mate == null ? null : -result.mate, reviewVersion: 2 })).catch(error => self.postMessage({ id: data.id, error: true, message: error.message }));
       return;
