@@ -112,3 +112,17 @@ body[data-board-theme=forest] .square{background:#ebefdf}body[data-board-theme=f
 body[data-piece-theme=castle] .board .piece-img{width:120%;height:120%;max-width:none;flex:none}
 body[data-piece-theme=castle] .settings-preview img{width:120%;height:120%;max-width:none;flex:none}
 .arena-same-bot{display:flex!important;align-items:center;gap:10px;cursor:pointer}.arena-same-bot input{width:20px;height:20px;accent-color:var(--green)}.arena-setup .form-field[hidden]{display:none}
+/* Use the wide computer screen for the puzzle board and a side control panel. */
+@media(min-width:1100px) and (min-height:600px){
+ body.layout-computer.focus-training #content{padding:0!important}
+ body.layout-computer.focus-training .focus-room{height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,27vw,410px);grid-template-rows:auto auto auto minmax(0,1fr) auto;gap:12px 24px;padding:14px 20px;align-items:stretch}
+ body.layout-computer.focus-training .focus-toolbar{grid-column:1/-1;grid-row:1}
+ body.layout-computer.focus-training .focus-board{grid-column:1;grid-row:2/6;align-self:center;justify-self:center;width:min(100%,calc(100dvh - 100px));max-width:none;height:auto;min-height:0;aspect-ratio:1}
+ body.layout-computer.focus-training .focus-status{grid-column:2;grid-row:2;width:100%;min-height:0;font-size:16px}
+ body.layout-computer.focus-training .focus-challenge{grid-column:2;grid-row:3;width:100%;flex-wrap:wrap;padding:14px;gap:10px}
+ body.layout-computer.focus-training .focus-challenge>span{font-size:15px}
+ body.layout-computer.focus-training .focus-challenge small{font-size:13px}
+ body.layout-computer.focus-training .focus-challenge .button{font-size:14px;min-height:40px}
+ body.layout-computer.focus-training .focus-message{grid-column:2;grid-row:4;text-align:left;font-size:15px;max-width:none;align-self:start}
+ body.layout-computer.focus-training .focus-controls{grid-column:2;grid-row:5;flex-wrap:wrap;align-self:end}
+}
