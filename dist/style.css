@@ -126,3 +126,7 @@ body[data-piece-theme=castle] .settings-preview img{width:120%;height:120%;max-w
  body.layout-computer.focus-training .focus-message{grid-column:2;grid-row:4;text-align:left;font-size:15px;max-width:none;align-self:start}
  body.layout-computer.focus-training .focus-controls{grid-column:2;grid-row:5;flex-wrap:wrap;align-self:end}
 }
+
+/* A consistent classic knight for navigation and empty states. */
+.knight-icon{display:inline-block;width:1em;height:1em;object-fit:contain;vertical-align:-.14em;filter:invert(27%) sepia(18%) saturate(1134%) hue-rotate(98deg) brightness(92%)}
+.brand-mark .knight-icon{width:90%;height:90%}.empty-symbol .knight-icon{width:1.2em;height:1.2em}.nav-icon .knight-icon{width:1.1em;height:1.1em}
