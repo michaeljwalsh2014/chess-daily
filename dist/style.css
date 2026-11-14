@@ -143,3 +143,5 @@ body{background:radial-gradient(ellipse at 8% 0%,#dce8ed80,transparent 45%),radi
 .coach-note{background:linear-gradient(120deg,#e8eef4,#f3eee4);border-color:#d7e0e7}.badge{background:#e6edf3;color:#38556e}
 .eyebrow{color:#7c694e}.device-switch{background:#e6ebee;border-color:#d7dfe5}.device-switch button.active{color:#294e65}
 .game-clock.running{background:linear-gradient(135deg,#e5eef3,#edf1ed);border-color:#88a2b3}.settings-heading h2{color:#29465d}
+
+.progress-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.progress-card{display:flex;flex-direction:column;align-items:flex-start}.progress-card p{margin:8px 0}.progress-card .button{margin-top:12px}.progress-number{font-size:clamp(38px,5vw,58px);font-weight:750;line-height:1.1;margin-top:14px;color:var(--deep)}.progress-simple details>summary{cursor:pointer;font-size:1.1em}.progress-simple details[open]>summary{margin-bottom:14px}@media(max-width:700px){.progress-overview{grid-template-columns:1fr}}
