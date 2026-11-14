@@ -102,3 +102,9 @@ body[data-board-theme=forest] .square{background:#ebefdf}body[data-board-theme=f
 .global-settings{display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--green);font-size:14px;font-weight:700;letter-spacing:0;white-space:nowrap}.global-settings span:first-child{font-size:20px;line-height:1}.global-settings:hover{background:var(--soft)}@media(max-width:500px){.global-settings{padding:7px 9px;font-size:12px}.global-settings span:first-child{font-size:18px}}
 
 .settings-preview{display:grid;grid-template-columns:repeat(8,1fr);width:min(100%,192px);aspect-ratio:1;margin:0 auto 14px;border-radius:6px;overflow:hidden}.settings-preview .square{width:100%;height:100%}.settings-preview img{width:84%;height:84%;object-fit:contain}.settings-field .bot-picker{font-weight:400}#game-settings-dialog .bot-picker-list{max-height:min(220px,32dvh)}
+/* Settings choices expand in the dialog instead of clipping below it. */
+#game-settings-dialog{width:min(94vw,480px);max-height:min(92dvh,780px);overscroll-behavior:contain}
+#game-settings-dialog .bot-picker-list{position:static;max-height:none;overflow:visible;margin-top:6px;box-shadow:none}
+#game-settings-dialog .bot-picker-option{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 12px}
+.settings-piece-icon{width:36px;height:36px;object-fit:contain;flex:none}
+#game-settings-dialog .settings-preview{width:min(100%,150px)}
