@@ -1,6 +1,6 @@
-import {autoMove} from './auto-engine.js?v=20261114-6';
-import { stockfishMove } from './strong-engine.js?v=20261114-6';
-import { chooseMove } from './engine-core.js?v=20261114-6';
+import {autoMove} from './auto-engine.js?v=20261114-26';
+import { stockfishMove } from './strong-engine.js?v=20261114-26';
+import { chooseMove } from './engine-core.js?v=20261114-26';
 
 self.onmessage = ({ data }) => {
   try {
