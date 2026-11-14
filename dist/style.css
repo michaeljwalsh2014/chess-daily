@@ -96,3 +96,5 @@ body[data-board-theme=green] .square{background:#ebecd0}body[data-board-theme=gr
 body[data-board-theme=blue] .square{background:#e6eef5}body[data-board-theme=blue] .square.dark{background:#4b78a4}
 body[data-board-theme=slate] .square{background:#e8e8e5}body[data-board-theme=slate] .square.dark{background:#68777a}
 body[data-board-theme=walnut] .square{background:#f0d9b5}body[data-board-theme=walnut] .square.dark{background:#946344}
+body[data-board-theme=sandstone] .square{background:#f7ebd1}body[data-board-theme=sandstone] .square.dark{background:#c18c5d}
+body[data-board-theme=forest] .square{background:#ebefdf}body[data-board-theme=forest] .square.dark{background:#426953}

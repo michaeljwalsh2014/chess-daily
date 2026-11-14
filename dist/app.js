@@ -8,7 +8,7 @@ const fmt=n=>Number(n).toLocaleString('en-US'), duration=n=>Math.floor(n/60)+':'
 const names={p:'pawn',n:'knight',b:'bishop',r:'rook',q:'queen',k:'king'},glyph={p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'};
 const tasks=[['puzzles','Solve three puzzles','10 min'],['rapid','Play a rapid game','15 + 10'],['review','Review one game','10 min'],['lesson','Learn one skill','10 min'],['endgame','Practice an endgame','10 min']];
 let puzzleAdvanceTimer=null,puzzleAdvanceCount=3;
-const boardThemes={green:'Classic Green',blue:'Ocean Blue',slate:'Slate',walnut:'Walnut'};
+const boardThemes={green:'Classic Green',blue:'Ocean Blue',slate:'Slate',walnut:'Walnut',sandstone:'Sandstone',forest:'Forest'};
 let boardTheme='green';try{const saved=localStorage.getItem('chess-board-theme');if(boardThemes[saved])boardTheme=saved}catch{}
 let arenaMatch=null,arenaWorker=null,arenaTimer=null,arenaToken=0,state,bank=[],legacy=[],puzzleMap=new Map(),view='dashboard',layoutMode='auto',selectedSkill=null,selectedSquare=null,flipped=false,paused=false,feedback=null,replayStep=null,review=null,journalFilter='all',pendingPromotion=null,lastTick=Date.now(),toastTimeout;
 try{state=normalize(JSON.parse(localStorage.getItem('chess-daily')))}catch{state=normalize(null)}
