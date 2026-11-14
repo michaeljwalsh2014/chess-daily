@@ -1,4 +1,4 @@
-import {autoMove} from './auto-engine.js?v=20261114-30';
+import {autoMove} from './auto-engine.js?v=20261114-opening-variety';
 import { stockfishMove } from './strong-engine.js?v=20261114-29';
 import { chooseMove } from './engine-core.js?v=20261114-26';
 

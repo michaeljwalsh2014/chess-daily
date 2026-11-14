@@ -64,6 +64,18 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
               const choices = [...pool.values()].filter(c => c.depth === best.depth && best.score-c.score >= 0 && best.score-c.score <= 400);
               choices.sort((a,b)=>Math.abs(best.score-a.score-target)-Math.abs(best.score-b.score-target));
               if (choices.length) code = choices[0].code;
+              // A fresh game seed varies sound opening replies, without
+              // changing Auto's adaptive move selection later in the game.
+              if (data.variety && !data.initialFen && (data.history || []).length < 12) {
+                const opening = [...pool.values()].filter(c => c.depth === best.depth && best.score - c.score >= 0 && best.score - c.score <= 70);
+                opening.sort((a,b) => a.code.localeCompare(b.code));
+                if (opening.length > 1) {
+                  let hash = Number(data.seed) >>> 0;
+                  for (const char of data.fen) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619) >>> 0;
+                  hash ^= hash >>> 16; hash = Math.imul(hash, 0x45d9f3b) >>> 0; hash ^= hash >>> 16;
+                  code = opening[(hash >>> 0) % opening.length].code;
+                }
+              }
             }
           }
           try {
