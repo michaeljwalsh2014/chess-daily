@@ -2,15 +2,19 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Chess} from '../dist/vendor/chess.js';
 import {LEVELS} from '../dist/game-core.js';
+import {spawn} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {stockfishMove} from '../dist/strong-engine.js';
 import {chooseMove} from '../dist/engine-core.js';
 let reply;globalThis.self={postMessage:r=>{reply=r}};
 await import('../dist/opponent.js');
 
-test('all five computer levels return legal moves without an external engine',()=>{
+test('all five computer levels return legal moves with bundled engines',async()=>{
   for(const level of [1,2,3,4,5]){
     const c=new Chess();c.move('e4');
-    self.onmessage({data:{fen:c.fen(),level,id:level,budget:250}});
-    assert.equal(reply.id,level);assert.equal(reply.engine,'search');assert.ok(c.move(reply.move));
+    if ([4,5].includes(level)) reply={id:level,...await stockfishMove({fen:c.fen(),level,budget:250},nativeWorker)};
+    else self.onmessage({data:{fen:c.fen(),level,id:level,budget:250}});
+    assert.equal(reply.id,level);assert.equal(reply.engine,[4,5].includes(level)?'stockfish':'search');assert.ok(c.move(reply.move));
   }
 });
 
@@ -20,7 +24,7 @@ test('Razor Teeth keeps its deeper search within a quicker response budget',()=>
   assert.ok(LEVELS[4].budget<=4000);
   assert.ok(LEVELS[4].delay<=5000);
   assert.equal(LEVELS[4].engine,undefined);
-  assert.deepEqual([LEVELS[4].depth,LEVELS[4].budget,LEVELS[4].delay],[8,1600,900]);
+  assert.deepEqual([LEVELS[4].depth,LEVELS[4].budget,LEVELS[4].delay],[9,2200,350]);
   assert.equal(LEVELS[5].name,'Cyber Tank');
   assert.ok(LEVELS[5].depth>LEVELS[4].depth);
   assert.ok(LEVELS[5].budget>LEVELS[4].budget);
@@ -34,8 +38,35 @@ test('the deep search sees mate and flags a missed forced mate',()=>{
   assert.ok(result.loss>90000);
 });
 
-test('finished positions return no move',()=>{
+test('finished positions return no move',async()=>{
   const c=new Chess();for(const m of ['f3','e5','g4','Qh4#'])c.move(m);
-  self.onmessage({data:{fen:c.fen(),level:4,id:9,budget:250}});
+  reply=await stockfishMove({fen:c.fen(),level:4,budget:250},nativeWorker);
   assert.equal(reply.move,null);
+});
+
+// Run the exact bundled WASM with Node's UCI transport for integration checks.
+function nativeWorker(url) {
+  const child=spawn(process.execPath,[fileURLToPath(url)],{stdio:['pipe','pipe','pipe']});
+  let pending='';
+  const worker={postMessage:line=>child.stdin.write(line+'\n'),terminate:()=>child.kill()};
+  child.stdout.on('data',chunk=>{pending+=chunk;const lines=pending.split('\n');pending=lines.pop();for(const line of lines)worker.onmessage?.({data:line.trim()});});
+  child.on('error',error=>worker.onerror?.(error));
+  return worker;
+}
+test('strong bots finish queen mate immediately even with rating limits',async()=>{
+  for(const level of [4,5]){
+    const chess=new Chess('7k/8/5KQ1/8/8/8/8/8 w - - 0 1');
+    const r=await stockfishMove({fen:chess.fen(),level,budget:200},nativeWorker);
+    chess.move(r.move);assert.ok(chess.isCheckmate());
+  }
+});
+
+test('Cyber Tank converts king and queen against engine defence without wandering',async()=>{
+  const chess=new Chess('7k/8/8/8/4Q3/8/8/K7 w - - 0 1');
+  const history=[];
+  for(let ply=0;ply<32&&!chess.isGameOver();ply++){
+    const r=await stockfishMove({fen:chess.fen(),level:5,budget:100,initialFen:'7k/8/8/8/4Q3/8/8/K7 w - - 0 1',history},nativeWorker);
+    history.push(chess.move(r.move).san);
+  }
+  assert.ok(chess.isCheckmate(),history.join(' '));
 });
