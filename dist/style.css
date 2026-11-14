@@ -132,7 +132,7 @@ body[data-piece-theme=castle] .settings-preview img{width:120%;height:120%;max-w
 .brand-mark .knight-icon{width:90%;height:90%}.empty-symbol .knight-icon{width:1.2em;height:1.2em}.nav-icon .knight-icon{width:1.1em;height:1.1em}
 
 /* Warm ivory, midnight blue and bronze accents. */
-:root{--paper:#f3f2ee;--ink:#253449;--muted:#657184;--green:#305a68;--deep:#213e50;--sage:#e2e9e9;--line:#dce1e5;--soft:#eaf0f2;--gold:#b68444;--shadow:0 5px 22px #263c5010}
+:root{--paper:#f3f2ee;--ink:#253449;--muted:#657184;--green:#35649a;--deep:#24466e;--sage:#e2e9e9;--line:#dce1e5;--soft:#eaf0f2;--gold:#b68444;--shadow:0 5px 22px #263c5010}
 body{background:radial-gradient(ellipse at 8% 0%,#dce8ed80,transparent 45%),radial-gradient(ellipse at 95% 15%,#eee0cc70,transparent 42%),var(--paper);background-attachment:fixed}
 .sidebar{background:linear-gradient(165deg,#e5edf0,#eeece5)}
 .brand-mark{background:linear-gradient(145deg,#365b70,#20394c);box-shadow:0 4px 12px #233e4920}.brand-mark .knight-icon{filter:invert(96%) sepia(9%) saturate(292%) hue-rotate(345deg) brightness(106%)}
@@ -141,7 +141,7 @@ body{background:radial-gradient(ellipse at 8% 0%,#dce8ed80,transparent 45%),radi
 .button.primary{background:linear-gradient(135deg,#365f75,#263f59);color:#fff;border-color:#304f65;box-shadow:0 4px 10px #263f5920}.button.primary:hover{background:linear-gradient(135deg,#416f86,#2c4a65)}
 .button.secondary,.global-settings{background:#ffffffdb;border-color:#d4dfe6;box-shadow:0 3px 10px #263f5908}.button.secondary:hover,.global-settings:hover{background:#edf3f6;border-color:#aebfcb}
 .coach-note{background:linear-gradient(120deg,#e8eef4,#f3eee4);border-color:#d7e0e7}.badge{background:#e6edf3;color:#38556e}
-.eyebrow{color:#7c694e}.device-switch{background:#e6ebee;border-color:#d7dfe5}.device-switch button.active{color:#294e65}
+.eyebrow{color:#68788e}.device-switch{background:#e6ebee;border-color:#d7dfe5}.device-switch button.active{color:#294e65}
 .game-clock.running{background:linear-gradient(135deg,#e5eef3,#edf1ed);border-color:#88a2b3}.settings-heading h2{color:#29465d}
 
 .progress-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.progress-card{display:flex;flex-direction:column;align-items:flex-start}.progress-card p{margin:8px 0}.progress-card .button{margin-top:12px}.progress-number{font-size:clamp(38px,5vw,58px);font-weight:750;line-height:1.1;margin-top:14px;color:var(--deep)}.progress-simple details>summary{cursor:pointer;font-size:1.1em}.progress-simple details[open]>summary{margin-bottom:14px}@media(max-width:700px){.progress-overview{grid-template-columns:1fr}}
@@ -154,15 +154,17 @@ body{background:#fff}
 .button.quiet{background:#edf4fb;color:#285779}
 .filters button{background:#edf4fb;color:#285779;border-color:#c5d8e9}.filters button.active{background:#305d82;color:#fff}
 
-/* Light blue controls on white, framed by charcoal navigation. */
+/* White surfaces, sky blue actions and a soft slate frame. */
 :root{--paper:#fff;--white:#fff;--soft:#f2f7fc}
 body{background:#fff}
 .panel{background:#fff}
 .button.primary{background:#d3e9fc;color:#193e5d;border:1px solid #a8cce9;box-shadow:0 3px 9px #263f5910}.button.primary:hover{background:#beddf7}
 .button.secondary,.global-settings{background:#edf7ff;color:#244f75;border-color:#c8e0f3}.button.secondary:hover,.global-settings:hover{background:#deeffd;border-color:#aacde8}
-.primary-nav{background:#242a32;border:1px solid #242a32;border-radius:14px;padding:5px;gap:4px;box-shadow:0 4px 12px #17212d12}
-.primary-nav button{color:#e4eaf1;border-radius:9px}.primary-nav button:hover{background:#37424f;color:#fff}.primary-nav button.active{background:#d3e9fc;color:#193e5d;box-shadow:none}
-.sidebar{background:#242a32;border-color:#242a32}.sidebar .brand,.sidebar .brand small,.sidebar .sidebar-bottom{color:#e5edf5}.sidebar nav button{color:#d9e3ee}.sidebar nav button:hover{background:#354352}.sidebar nav button.active{background:#d3e9fc;color:#193e5d}
+.primary-nav{background:linear-gradient(180deg,#626b77,#555e6a);border:1px solid #727c88;border-radius:16px;padding:6px;gap:4px;box-shadow:0 5px 16px #26344516,inset 0 1px 0 #ffffff25}
+.primary-nav button{color:#e4eaf1;border-radius:9px}.primary-nav button:hover{background:#ffffff18;color:#fff}.primary-nav button.active{background:#e1f0ff;color:#234d79;box-shadow:0 2px 6px #27344420,inset 0 1px 0 #fff}
+.sidebar{background:linear-gradient(180deg,#626b77,#555e6a);border-color:#727c88}.sidebar .brand,.sidebar .brand small,.sidebar .sidebar-bottom{color:#e5edf5}.sidebar nav button{color:#d9e3ee}.sidebar nav button:hover{background:#354352}.sidebar nav button.active{background:#d3e9fc;color:#193e5d}
 .device-switch{background:#f2f7fc;border-color:#d8e5ef}.device-switch button[aria-pressed="true"]{background:#d3e9fc;color:#193e5d}
 .coach-note{background:#f7fbff;border-color:#d9e7f2}
 html{scrollbar-color:#596575 #f5f7fa;scrollbar-width:thin}::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:#f5f7fa}::-webkit-scrollbar-thumb{background:#596575;border:2px solid #f5f7fa;border-radius:8px}
+
+.primary-nav button{transition:background .16s ease,color .16s ease;min-height:44px}.button{transition:background .16s ease,border-color .16s ease,box-shadow .16s ease}.panel{border-color:#e1e7ee;box-shadow:0 4px 18px #30456008}.topbar{border-color:#e4e9ef}.device-switch{box-shadow:inset 0 1px 3px #36516c06}
