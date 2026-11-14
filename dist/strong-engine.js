@@ -6,7 +6,7 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
     const chess = new Chess(data.fen);
     if (chess.isGameOver()) return resolve({ move: null, engine: 'stockfish' });
     const worker = createWorker(new URL('./vendor/stockfish/stockfish-17.1-lite-single-03e3232.js', import.meta.url));
-    const budget = Math.max(10, Math.floor(Number(data.budget ?? data.thinkMs) || 2200));
+    const budget = Math.max(5, Math.floor(Number(data.budget ?? data.thinkMs) || 2200));
     const timer = setTimeout(() => finish(new Error('Stockfish did not respond. Please retry.')), budget + 15000);
     let depth = 0, nodes = 0, score = 0;
     function finish(error, result) {
@@ -21,7 +21,7 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
           worker.postMessage('setoption name Hash value 16');
           const pieces = chess.board().flat().filter(Boolean);
           const bareKing = ['w', 'b'].some(color => pieces.filter(p => p.color === color).every(p => p.type === 'k'));
-          worker.postMessage(`setoption name UCI_LimitStrength value ${bareKing ? 'false' : 'true'}`);
+          worker.postMessage(`setoption name UCI_LimitStrength value ${bareKing || Number(data.level) === 7 ? 'false' : 'true'}`);
           worker.postMessage(`setoption name UCI_Elo value ${Number(data.level) === 5 ? 2100 : 1800}`);
           worker.postMessage('isready');
         } else if (line === 'readyok') {

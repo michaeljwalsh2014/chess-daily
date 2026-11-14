@@ -3,3 +3,14 @@ test('all bots reduce both delay and search as time falls, including with increm
 test('wins explain timeout and checkmate distinctly',()=>{assert.deepEqual(resultMessage({result:'win',reason:'Time expired'}),{title:'You won!',explanation:'The computer ran out of time.'});assert.match(resultMessage({result:'win',reason:'Checkmate'}).explanation,/checkmated/);assert.match(resultMessage({result:'loss',reason:'Time expired'}).explanation,/You ran out/);});
 
 test('Cyber Tank uses six seconds with ten minutes and saves time in trouble',()=>{assert.equal(botTiming(5,{b:600}).budget,6000);assert.equal(botTiming(5,{b:600}).delay,0);assert.ok(botTiming(5,{b:30}).budget<1000);assert.ok(botTiming(5,{b:5}).budget<=100);assert.equal(botTiming(4,{b:600}).budget,2200);});
+
+test('Hyper Bullet 3.0 has three speed bands and no artificial delay',()=>{
+  let previous=Infinity;
+  for(const b of [60,45,31,30,20,16,15,10,5,1,.1]){
+    const t=botTiming(7,{b});assert.equal(t.delay,0);assert.ok(t.budget<=previous);previous=t.budget;
+  }
+  assert.equal(botTiming(7,{b:60}).budget,720);
+  assert.equal(botTiming(7,{b:30}).budget,240);
+  assert.ok(botTiming(7,{b:15}).budget<=35);
+  assert.equal(botTiming(7,{b:10}).budget,30);
+});

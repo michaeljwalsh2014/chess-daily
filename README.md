@@ -26,3 +26,5 @@ New puzzle selection excludes seen puzzle IDs and piece-placement/side-to-move c
 ## Checks
 
 Run `node --test tests/*.test.mjs`. The app is buildless; serve `dist/` as static files. Hosting identity is preserved in `.openai/hosting.json`.
+
+Hyper Bullet Bot 3.0 uses unrestricted bundled Stockfish: up to 800 ms above 30 seconds, 120–240 ms between 15 and 30 seconds, and 5–35 ms below 15 seconds. It has no artificial delay. Hyper Bullet Bot 2.0 retains the original local engine.

@@ -1,5 +1,5 @@
 import { Chess } from './vendor/chess.js';
-import { LEVELS } from './game-core.js?v=20261114-1';
+import { LEVELS } from './game-core.js?v=20261114-2';
 
 const pieceValue = { p: 100, n: 325, b: 335, r: 500, q: 950, k: 0 };
 const mateScore = 100000;
