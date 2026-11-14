@@ -15,11 +15,11 @@ export function evaluation(analysis, color) {
   const sign = color === 'w' ? 1 : -1;
   const cp = (Number(analysis.actualScore) || 0) * sign;
   const mate = analysis.actualMate == null ? null : analysis.actualMate * sign;
-  const white = Math.max(3, Math.min(97, 50 + 45 * Math.tanh(cp / 500)));
+  const white = mate != null ? (cp > 0 || (mate > 0 || mate === 0 && cp > 0) ? 97 : 3) : Math.max(3, Math.min(97, 50 + 45 * Math.tanh(cp / 500)));
   return {
-    text: mate != null ? `${mate > 0 ? '+' : '−'}M${Math.abs(mate)}` : `${cp >= 0 ? '+' : ''}${(cp / 100).toFixed(1)}`,
+    text: mate != null ? `${(mate > 0 || mate === 0 && cp > 0) ? '+' : '−'}M${Math.abs(mate)}` : `${cp >= 0 ? '+' : ''}${(cp / 100).toFixed(1)}`,
     white,
-    description: mate != null ? `${mate > 0 ? 'White' : 'Black'} has a forced mate`
+    description: mate != null ? `${(mate > 0 || mate === 0 && cp > 0) ? 'White' : 'Black'} has a forced mate`
       : Math.abs(cp) < 30 ? 'Roughly equal' : `${cp > 0 ? 'White' : 'Black'} is ahead`,
   };
 }

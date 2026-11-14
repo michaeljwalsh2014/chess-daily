@@ -4,11 +4,11 @@ import { Chess } from './vendor/chess.js';
 export function stockfishMove(data, createWorker = url => new Worker(url)) {
   return new Promise((resolve, reject) => {
     const chess = new Chess(data.fen);
-    if (chess.isGameOver()) return resolve({ move: null, engine: 'stockfish' });
+    if (chess.isGameOver()) return resolve({ move: null, engine: 'stockfish', score: chess.isCheckmate() ? -100000 : 0, mate: chess.isCheckmate() ? 0 : null });
     const worker = createWorker(new URL('./vendor/stockfish/stockfish-17.1-lite-single-03e3232.js', import.meta.url));
     const budget = Math.max(5, Math.floor(Number(data.budget ?? data.thinkMs) || 2200));
     const timer = setTimeout(() => finish(new Error('Stockfish did not respond. Please retry.')), budget + 15000);
-    let depth = 0, nodes = 0, score = 0;
+    let depth = 0, nodes = 0, score = 0, mate = null;
     function finish(error, result) {
       clearTimeout(timer);
       worker.terminate();
@@ -21,7 +21,7 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
           worker.postMessage('setoption name Hash value 16');
           const pieces = chess.board().flat().filter(Boolean);
           const bareKing = ['w', 'b'].some(color => pieces.filter(p => p.color === color).every(p => p.type === 'k'));
-          worker.postMessage(`setoption name UCI_LimitStrength value ${bareKing || Number(data.level) === 7 ? 'false' : 'true'}`);
+          worker.postMessage(`setoption name UCI_LimitStrength value ${data.review || bareKing || Number(data.level) === 7 ? 'false' : 'true'}`);
           worker.postMessage(`setoption name UCI_Elo value ${Number(data.level) === 5 ? 2100 : 1800}`);
           worker.postMessage('isready');
         } else if (line === 'readyok') {
@@ -41,14 +41,16 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
           depth = Number(line.match(/\bdepth (\d+)/)?.[1]) || depth;
           nodes = Number(line.match(/\bnodes (\d+)/)?.[1]) || nodes;
           const cp = line.match(/\bscore cp (-?\d+)/);
-          if (cp) score = Number(cp[1]);
+          if (cp) { score = Number(cp[1]); mate = null; }
+          const m = line.match(/\bscore mate (-?\d+)/);
+          if (m) { mate = Number(m[1]); score = Math.sign(mate || -1) * 100000; }
         } else if (line.startsWith('bestmove ')) {
           const code = line.split(/\s+/)[1];
           try {
             const move = { from: code.slice(0, 2), to: code.slice(2, 4), ...(code.length === 5 ? { promotion: code[4] } : {}) };
             const played = chess.move(move);
             if (!played) throw new Error('Illegal engine move');
-            finish(null, { move, san: played.san, engine: 'stockfish', depth, nodes, score });
+            finish(null, { move, san: played.san, engine: 'stockfish', depth, nodes, score, mate });
           } catch { finish(new Error('Stockfish returned an invalid move. Please retry.')); }
         }
       }

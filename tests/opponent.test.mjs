@@ -70,3 +70,9 @@ test('Cyber Tank converts king and queen against engine defence without wanderin
   }
   assert.ok(chess.isCheckmate(),history.join(' '));
 });
+
+test('unrestricted review sees the forced loss before the opponent delivers it',async()=>{
+ const c=new Chess();for(const move of ['f3','e5','g4'])c.move(move);
+ const r=await stockfishMove({fen:c.fen(),review:true,budget:500},nativeWorker);
+ assert.equal(r.mate,1);assert.ok(-r.score < -90000);
+});
