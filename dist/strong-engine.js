@@ -27,7 +27,7 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
           worker.postMessage(`setoption name UCI_Elo value ${Number(data.level) === 5 ? 2100 : 1800}`);
           if (data.autoStrength != null) {
             worker.postMessage('setoption name UCI_LimitStrength value false');
-            worker.postMessage('setoption name MultiPV value 12');
+            worker.postMessage(`setoption name MultiPV value ${Math.max(2, Math.min(12, Number(data.autoCandidates) || 12))}`);
           }
           worker.postMessage('isready');
         } else if (line === 'readyok') {
@@ -56,7 +56,7 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
         } else if (line.startsWith('bestmove ')) {
           let code = line.split(/\s+/)[1];
           if (data.autoStrength != null && candidates.size) {
-            const complete=[...rounds.entries()].sort((a,b)=>b[0]-a[0]).find(([,round])=>round.has(1)&&round.size>=Math.min(12,chess.moves().length));
+            const complete=[...rounds.entries()].sort((a,b)=>b[0]-a[0]).find(([,round])=>round.has(1)&&round.size>=Math.min(Math.max(2, Math.min(12, Number(data.autoCandidates) || 12)),chess.moves().length));
             const pool=complete?complete[1]:candidates;
             const best = pool.get(1);
             if (best) {

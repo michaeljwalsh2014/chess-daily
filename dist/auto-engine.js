@@ -28,7 +28,7 @@ export async function autoMove(data, run = stockfishMove) {
       for (const move of history) replay.move(move);
       if (replay.fen() === data.fen) {
         replay.undo();
-        const slice = Math.floor(total * 0.2);
+        const slice = Math.floor(total * 0.15);
         const before = await run({...data,fen:replay.fen(),history:history.slice(0,-1),review:true,budget:slice});
         const after = await run({...data,review:true,budget:slice});
         // Scores are from opposite sides to move: add to get the player's loss.
@@ -37,6 +37,6 @@ export async function autoMove(data, run = stockfishMove) {
       }
     } catch { /* Keep the previous level if a legacy history cannot be replayed. */ }
   }
-  const result = await run({...data,review:false,autoStrength:adaptive.strength,budget:Math.max(5,total-spent)});
+  const result = await run({...data,review:false,autoStrength:adaptive.strength,autoCandidates:total<200?3:total<700?5:12,budget:Math.max(5,total-spent)});
   return {...result,autoState:adaptive};
 }
