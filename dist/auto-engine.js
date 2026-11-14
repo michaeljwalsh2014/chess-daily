@@ -1,15 +1,19 @@
 import {Chess} from './vendor/chess.js';
 import {stockfishMove} from './strong-engine.js?v=20261114-4';
 
-export function adaptAuto(previous, loss) {
+export function adaptAuto(previous, loss, autoAdvantage = 0) {
   const strength = Math.max(0, Math.min(1, Number(previous?.strength) || 0.4));
   const samples = Math.max(0, Number(previous?.samples) || 0);
   if (!Number.isFinite(loss)) return {strength, samples};
   // Smooth recent move quality; one blunder never changes the whole personality.
   const quality = Math.max(0, Math.min(1, 1 - Math.max(0, loss) / 220));
   const average = samples ? previous.average * 0.75 + quality * 0.25 : quality;
-  const target = Math.max(0.08, Math.min(0.92, average * 0.9));
-  return {strength: strength + Math.max(-0.06, Math.min(0.04, (target-strength)*0.2)), average, samples:samples+1};
+  // Stockfish scores from the side to move: a positive after-score means Auto
+  // is ahead. Ease off when winning; defend more accurately when behind.
+  const balanceTarget = Math.max(0.08, Math.min(0.92, 0.48 - Math.tanh(autoAdvantage / 300) * 0.4));
+  const moveQualityTarget = Math.max(0.08, Math.min(0.92, average * 0.9));
+  const target = balanceTarget * 0.8 + moveQualityTarget * 0.2;
+  return {strength: strength + Math.max(-0.1, Math.min(0.1, (target-strength)*0.35)), average, samples:samples+1};
 }
 
 export async function autoMove(data, run = stockfishMove) {
@@ -27,7 +31,7 @@ export async function autoMove(data, run = stockfishMove) {
         const before = await run({...data,fen:replay.fen(),history:history.slice(0,-1),review:true,budget:slice});
         const after = await run({...data,review:true,budget:slice});
         // Scores are from opposite sides to move: add to get the player's loss.
-        adaptive = adaptAuto(adaptive, Math.max(0,before.score + after.score));
+        adaptive = adaptAuto(adaptive, Math.max(0,before.score + after.score), after.score);
         spent = slice * 2;
       }
     } catch { /* Keep the previous level if a legacy history cannot be replayed. */ }
