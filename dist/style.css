@@ -153,3 +153,16 @@ body{background:#fff}
 .button.secondary:hover,.global-settings:hover{background:#dceaf7;border-color:#8eb1d2}
 .button.quiet{background:#edf4fb;color:#285779}
 .filters button{background:#edf4fb;color:#285779;border-color:#c5d8e9}.filters button.active{background:#305d82;color:#fff}
+
+/* Light blue controls on white, framed by charcoal navigation. */
+:root{--paper:#fff;--white:#fff;--soft:#f2f7fc}
+body{background:#fff}
+.panel{background:#fff}
+.button.primary{background:#d3e9fc;color:#193e5d;border:1px solid #a8cce9;box-shadow:0 3px 9px #263f5910}.button.primary:hover{background:#beddf7}
+.button.secondary,.global-settings{background:#edf7ff;color:#244f75;border-color:#c8e0f3}.button.secondary:hover,.global-settings:hover{background:#deeffd;border-color:#aacde8}
+.primary-nav{background:#242a32;border:1px solid #242a32;border-radius:14px;padding:5px;gap:4px;box-shadow:0 4px 12px #17212d12}
+.primary-nav button{color:#e4eaf1;border-radius:9px}.primary-nav button:hover{background:#37424f;color:#fff}.primary-nav button.active{background:#d3e9fc;color:#193e5d;box-shadow:none}
+.sidebar{background:#242a32;border-color:#242a32}.sidebar .brand,.sidebar .brand small,.sidebar .sidebar-bottom{color:#e5edf5}.sidebar nav button{color:#d9e3ee}.sidebar nav button:hover{background:#354352}.sidebar nav button.active{background:#d3e9fc;color:#193e5d}
+.device-switch{background:#f2f7fc;border-color:#d8e5ef}.device-switch button[aria-pressed="true"]{background:#d3e9fc;color:#193e5d}
+.coach-note{background:#f7fbff;border-color:#d9e7f2}
+html{scrollbar-color:#596575 #f5f7fa;scrollbar-width:thin}::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:#f5f7fa}::-webkit-scrollbar-thumb{background:#596575;border:2px solid #f5f7fa;border-radius:8px}
