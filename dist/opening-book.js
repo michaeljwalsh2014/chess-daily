@@ -33,7 +33,7 @@ export function standardOpening(data){
  let hash=Number(data.seed)>>>0;hash=Math.imul(hash^0x9e3779b9,0x45d9f3b)>>>0;hash^=hash>>>16;
  // Give Big Fish and the top Stockfish opponent a sound, consistent opening.
  // Other bots occasionally leave book to keep their play varied.
- if(![3,11].includes(Number(data.level))&&(hash>>>0)%12===0)return null;
+ if(![3,10,11].includes(Number(data.level))&&(hash>>>0)%12===0)return null;
  const choices=[...new Set(OPENING_LINES.filter(line=>line.length>history.length&&history.every((san,i)=>san===line[i])).map(line=>line[history.length]))];
  if(!choices.length)return null;
  const san=choices[(hash>>>0)%choices.length];

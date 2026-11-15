@@ -1,5 +1,5 @@
 import { Chess } from './vendor/chess.js';
-import { LEVELS } from './game-core.js?v=20261115-big-fish';
+import { LEVELS } from './game-core.js?v=20261115-barracuda';
 
 const pieceValue = { p: 100, n: 325, b: 335, r: 500, q: 950, k: 0 };
 const mateScore = 100000;
@@ -279,7 +279,7 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
     const nearBest = candidateRoots.filter(root => candidateRoots[0].score - root.score <= 35).slice(0, 2);
     if (nearBest.length > 1) selected = nearBest[Math.floor(seededFraction(seed, fen) * nearBest.length)];
   }
-  if (variety && level !== 3 && historyMoves.length < 16) {
+  if (variety && level !== 3 && level !== 10 && historyMoves.length < 16) {
     const tolerance = ({ 1: 120, 2: 35, 3: 70, 4: 45, 5: 30, 6: 20, 7: 20, 9: 180, 10: 45 })[level] || 50;
     const openingChoices = candidateRoots.filter(root => candidateRoots[0].score - root.score <= tolerance).slice(0, 5);
     if (openingChoices.length > 1) {
