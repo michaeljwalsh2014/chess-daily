@@ -175,3 +175,18 @@ body[data-piece-theme=castle] .settings-preview img{width:120%;height:120%;max-w
 body.layout-ipad.ipad-game .game-status{grid-template-rows:auto;min-height:48px}
 body.layout-ipad.ipad-game .game-status h2{min-height:3em}
 body.layout-ipad.ipad-game .game-clocks .game-clock{min-height:86px}
+
+/* Keep the board home within the viewport when there is room for its controls. */
+body.board-home-active footer{display:none}
+@media(min-width:761px) and (min-height:600px){
+ body.board-home-active{height:100dvh;overflow:hidden}
+ body.board-home-active .app-shell{height:100dvh;overflow:hidden}
+ body.board-home-active main{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+ body.board-home-active .topbar,body.board-home-active .primary-nav{flex-shrink:0}
+ body.board-home-active #content{flex:1;min-height:0;padding:clamp(8px,2dvh,24px) 0!important}
+ body.board-home-active .board-home{height:100%;min-height:0;display:flex;flex-direction:column}
+ body.board-home-active .board-home-heading{flex:0 0 auto;margin-bottom:12px}
+ body.board-home-active .board-home-layout{flex:1;min-height:0;width:100%}
+ body.board-home-active .board-home-board{width:min(100%,calc(100dvh - 290px));max-height:100%;aspect-ratio:1}
+ body.board-home-active .board-home-board .board{height:100%}
+}

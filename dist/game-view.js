@@ -33,4 +33,3 @@ export function syncBoard(oldBoard,newBoard){
   old.replaceChildren(...fresh.childNodes);
  });
 }
-let dragGesture=null,suppressBoardClick=false,dragDropInProgress=false;
