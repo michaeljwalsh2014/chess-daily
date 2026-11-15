@@ -19,13 +19,16 @@ export function syncBoard(oldBoard,newBoard){
  // Pool existing decoded images before changing squares, so moves and captures
  // keep their image nodes even when the source square is updated first.
  const images=[...oldBoard.querySelectorAll('img')],used=new Set();
- for(const image of images)for(const animation of image.getAnimations?.()||[])animation.cancel();
+ const unchanged=new Set();
+ [...newBoard.children].forEach((fresh,i)=>{const old=oldBoard.children[i];if(old&&old.innerHTML===fresh.innerHTML){unchanged.add(i);const image=old.querySelector('img');if(image)used.add(image)}});
+ if(oldBoard.dataset.fen!==newBoard.dataset.fen)for(const image of images)for(const animation of image.getAnimations?.()||[])animation.cancel();
  for(const a of [...oldBoard.attributes])if(!newBoard.hasAttribute(a.name))oldBoard.removeAttribute(a.name);
  for(const a of newBoard.attributes)oldBoard.setAttribute(a.name,a.value);
  [...newBoard.children].forEach((fresh,i)=>{
-  const old=oldBoard.children[i];old.style.zIndex='';
+  const old=oldBoard.children[i];if(!unchanged.has(i))old.style.zIndex='';
   for(const a of [...old.attributes])if(!fresh.hasAttribute(a.name))old.removeAttribute(a.name);
   for(const a of fresh.attributes)old.setAttribute(a.name,a.value);
+  if(unchanged.has(i))return;
   const freshImage=fresh.querySelector('img'),src=freshImage?.getAttribute('src');
   const existing=old.querySelector('img');
   const image=src?(existing?.getAttribute('src')===src&&!used.has(existing)?existing:images.find(img=>!used.has(img)&&img.getAttribute('src')===src)):null;
