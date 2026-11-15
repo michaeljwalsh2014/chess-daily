@@ -6,7 +6,7 @@ let demonstrationSpeed=1;try{const speed=Number(localStorage.getItem('chess-demo
 import {ENDGAME_DEMOS} from './endgame-demos.js?v=20261114-endgame-ladder';
 import {moveGrade,evaluation,whiteScore,moveInsight} from './review-core.js?v=20261114-26';
 import {Chess} from './vendor/chess.js';
-import {LEVELS,CONTROLS,ENDGAMES,botTiming,resultMessage,executePremove,pendingPremoves,clearPremoves,queuePremove,premoveBoard,gameFrom,settleClock,commitMove,gameSummary,moveNotes} from './game-core.js?v=20261114-standard-openings';
+import {LEVELS,CONTROLS,ENDGAMES,botTiming,resultMessage,executePremove,pendingPremoves,clearPremoves,queuePremove,premoveBoard,gameFrom,settleClock,commitMove,gameSummary,moveNotes} from './game-core.js?v=20261114-ultra-name';
 import {SKILLS,LESSONS,clamp,startingTarget,newCoach,adapt,recommendSkill,pickPuzzle,positionKey,lessonFor,weekKey,localDate,normalize,validBackup} from './core.js';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
