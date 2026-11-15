@@ -164,3 +164,14 @@ body[data-piece-theme=castle] .settings-preview img{width:120%;height:120%;max-w
 
 /* Match the in-game Settings icon to the header control. */
 .settings-icon{display:inline-flex;align-items:center;justify-content:center;font-size:1.85em;line-height:1}
+
+/* Reserve clock and status rows so turn changes never shift the move list. */
+.game-room .game-clocks .game-clock{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(2.7em,auto) auto;align-content:start;align-items:start;justify-content:stretch;gap:4px;min-height:100px}
+.game-room .game-clocks .game-clock>span{line-height:1.35}
+.game-room .game-clocks .game-clock>b{font-variant-numeric:tabular-nums;min-width:8ch;font-size:clamp(18px,2vw,25px)}
+.game-room .game-status{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;gap:4px;align-content:start;min-height:110px}
+.game-room .game-status h2{margin:0;line-height:1.5;min-height:3em}
+.game-room .game-status>.fine{line-height:1.4;min-height:2.8em}
+body.layout-ipad.ipad-game .game-status{grid-template-rows:auto;min-height:48px}
+body.layout-ipad.ipad-game .game-status h2{min-height:3em}
+body.layout-ipad.ipad-game .game-clocks .game-clock{min-height:86px}

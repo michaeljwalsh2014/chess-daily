@@ -1,0 +1,15 @@
+<!doctype html><meta charset="utf-8"><h1>Game interface regression checks</h1><pre id="results">Running…</pre><main id="fixture"></main><script type="module">
+import {patchGameView,syncBoard} from '../dist/game-view.js';
+
+const main=document.querySelector('#fixture');
+const assert=(ok,label)=>{if(!ok)throw Error(label)};
+function room(move){const section=document.createElement('section');section.className='game-room';section.innerHTML=`<div class="game-clocks"><b id="white-clock">${move}:00</b></div><div class="game-status">${move%2?'Computer is thinking…':'Your turn'}</div><div class="game-board"><div class="board">${Array.from({length:64},(_,i)=>`<button data-square="${i}">${i===move%64?'<img src="pieces/wP.svg">':''}</button>`).join('')}</div></div><div class="live-moves">Move ${move}</div>`;return section}
+try{
+const current=room(0);main.append(current);const board=current.querySelector('.board'),clock=current.querySelector('#white-clock'),squares=[...board.children],image=board.querySelector('img');
+let detached=0;const observer=new MutationObserver(records=>{for(const r of records)for(const node of r.removedNodes)if(node===board||node===current||squares.includes(node))detached++});observer.observe(main,{childList:true,subtree:true});
+for(let move=1;move<=100;move++){patchGameView(current,room(move),syncBoard);assert(current.querySelector('.board')===board,'board identity');assert(current.querySelector('#white-clock')===clock,'clock identity');assert(squares.every((sq,i)=>board.children[i]===sq),'square identity');assert(board.querySelector('img')===image,'decoded piece identity');assert(board.children[move%64].contains(image),'piece destination');assert(clock.textContent===move+':00','clock text')}
+await new Promise(resolve=>setTimeout(resolve,0));assert(detached===0,'board or square detached');observer.disconnect();
+patchGameView(current,room(101),syncBoard);current.querySelector('.game-board').insertAdjacentHTML('beforeend','<div class="result-overlay">Done</div>');patchGameView(current,room(102),syncBoard);assert(!current.querySelector('.result-overlay'),'obsolete overlay removed');
+document.querySelector('#results').textContent='PASS: 100 rapid updates preserve the room, board, all 64 squares, clock, and decoded piece. Piece destinations and clock text update correctly. No board or square was detached. Obsolete overlays are removed.';
+}catch(error){document.querySelector('#results').textContent='FAIL: '+error.stack}
+</script>
