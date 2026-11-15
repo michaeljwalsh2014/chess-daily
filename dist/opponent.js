@@ -1,7 +1,7 @@
 import {standardOpening} from './opening-book.js?v=20261115-bot-openings';
 import {autoMove} from './auto-engine.js?v=20261114-auto-bullet-variety';
 import { stockfishMove } from './strong-engine.js?v=20261115-tactical-captures';
-import { chooseMove } from './engine-core.js?v=20261115-bot-roster';
+import { chooseMove } from './engine-core.js?v=20261115-minnow-adjusted';
 
 self.onmessage = ({ data }) => {
   try {
