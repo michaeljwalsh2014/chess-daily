@@ -40,8 +40,8 @@ export function stockfishMove(data, createWorker = createStockfishWorker, onProg
       worker.postMessage('setoption name Hash value 16');
       const pieces = chess.board().flat().filter(Boolean);
       const bareKing = ['w', 'b'].some(color => pieces.filter(p => p.color === color).every(p => p.type === 'k'));
-      worker.postMessage(`setoption name UCI_LimitStrength value ${data.review || bareKing || Number(data.level) === 7 || Number(data.level) === 11 ? 'false' : 'true'}`);
-      worker.postMessage(`setoption name UCI_Elo value ${Number(data.level) === 5 ? 2000 : Number(data.level) === 11 ? 3200 : 1800}`);
+      worker.postMessage(`setoption name UCI_LimitStrength value ${data.review || bareKing || Number(data.level) === 7 ? 'false' : 'true'}`);
+      worker.postMessage(`setoption name UCI_Elo value ${Number(data.level) === 5 ? 2000 : Number(data.level) === 11 ? 2400 : 1800}`);
       if (data.autoStrength != null) {
         worker.postMessage('setoption name UCI_LimitStrength value false');
         worker.postMessage(`setoption name MultiPV value ${Math.max(2, Math.min(12, Number(data.autoCandidates) || 12))}`);
