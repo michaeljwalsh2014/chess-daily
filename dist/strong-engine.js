@@ -1,7 +1,7 @@
 import { Chess } from './vendor/chess.js';
 
 // A separate classic worker keeps the GPL Stockfish distribution unmodified.
-export function stockfishMove(data, createWorker = url => new Worker(url)) {
+export function stockfishMove(data, createWorker = url => new Worker(url), onProgress = null) {
   return new Promise((resolve, reject) => {
     const chess = new Chess(data.fen);
     if (chess.isGameOver()) return resolve({ move: null, engine: 'stockfish', score: chess.isCheckmate() ? -100000 : 0, mate: chess.isCheckmate() ? 0 : null });
@@ -42,7 +42,8 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
             if (moves.length && replay.fen() === data.fen) position = `position ${data.initialFen ? 'fen ' + data.initialFen : 'startpos'} moves ${moves.join(' ')}`;
           } catch { /* The supplied FEN remains authoritative. */ }
           worker.postMessage(position);
-          worker.postMessage(`go movetime ${budget}`);
+          if(data.infinite)clearTimeout(timer);
+          worker.postMessage(data.infinite?'go infinite':`go movetime ${budget}`);
         } else if (line.startsWith('info ')) {
           const candidate = line.match(/\bscore cp (-?\d+).*\bpv ([a-h][1-8][a-h][1-8][qrbn]?)/);
           const rank = Number(line.match(/\bmultipv (\d+)/)?.[1] || 1);
@@ -53,6 +54,10 @@ export function stockfishMove(data, createWorker = url => new Worker(url)) {
           if (cp && rank === 1 && !/lowerbound|upperbound/.test(line)) { score = Number(cp[1]); mate = null; }
           const m = line.match(/\bscore mate (-?\d+)/);
           if (m && rank === 1 && !/lowerbound|upperbound/.test(line)) { mate = Number(m[1]); score = Math.sign(mate || -1) * 100000; }
+          if(data.infinite && onProgress && rank===1 && !/lowerbound|upperbound/.test(line)) {
+            const pv=line.match(/\bpv ([a-h][1-8][a-h][1-8][qrbn]?)/);
+            if(pv && (cp||m))try{const code=pv[1],copy=new Chess(data.fen),move={from:code.slice(0,2),to:code.slice(2,4),...(code[4]?{promotion:code[4]}:{})},played=copy.move(move);onProgress({move,san:played.san,engine:'stockfish',depth,nodes,score,mate,streaming:true})}catch{}
+          }
         } else if (line.startsWith('bestmove ')) {
           let code = line.split(/\s+/)[1];
           if (data.autoStrength != null && candidates.size) {
