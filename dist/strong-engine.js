@@ -1,15 +1,17 @@
 import { Chess } from './vendor/chess.js';
 
 let ratingStockfishWorker = null, ratingStockfishReady = false;
+function createStockfishWorker(url) { return new Worker(url); }
 
 // A separate classic worker keeps the GPL Stockfish distribution unmodified.
-export function stockfishMove(data, createWorker = url => new Worker(url), onProgress = null) {
+export function stockfishMove(data, createWorker = createStockfishWorker, onProgress = null) {
   return new Promise((resolve, reject) => {
     const chess = new Chess(data.fen);
     if (chess.isGameOver()) return resolve({ move: null, engine: 'stockfish', score: chess.isCheckmate() ? -100000 : 0, mate: chess.isCheckmate() ? 0 : null });
     const workerUrl = new URL('./vendor/stockfish/stockfish-17.1-lite-single-03e3232.js', import.meta.url);
-    const reused = !!(data.review && ratingStockfishWorker && ratingStockfishReady);
-    const worker = data.review ? (ratingStockfishWorker ||= createWorker(workerUrl)) : createWorker(workerUrl);
+    const pooled = data.review && createWorker === createStockfishWorker;
+    const reused = !!(pooled && ratingStockfishWorker && ratingStockfishReady);
+    const worker = pooled ? (ratingStockfishWorker ||= createWorker(workerUrl)) : createWorker(workerUrl);
     const budget = Math.max(5, Math.floor(Number(data.budget ?? data.thinkMs) || 2200));
     const timer = setTimeout(() => finish(new Error('Stockfish did not respond. Please retry.')), budget + 15000);
     let depth = 0, nodes = 0, score = 0, mate = null;
@@ -17,7 +19,7 @@ export function stockfishMove(data, createWorker = url => new Worker(url), onPro
     const rounds = new Map();
     function finish(error, result) {
       clearTimeout(timer);
-      if (error || !data.review) {
+      if (error || !pooled) {
         worker.terminate();
         if (worker === ratingStockfishWorker) { ratingStockfishWorker = null; ratingStockfishReady = false; }
       } else { worker.onmessage = null; worker.onerror = null; }
@@ -39,7 +41,7 @@ export function stockfishMove(data, createWorker = url => new Worker(url), onPro
     worker.onmessage = ({ data: output }) => {
       for (const line of String(output).split('\n')) {
         if (line === 'uciok') {
-          if (data.review) ratingStockfishReady = true;
+          if (pooled) ratingStockfishReady = true;
           configure();
         } else if (line === 'readyok') {
           // Restore history so the engine sees repetitions and the fifty-move clock.
