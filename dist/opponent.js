@@ -1,6 +1,6 @@
 import {standardOpening} from './opening-book.js?v=1';
 import {autoMove} from './auto-engine.js?v=20261114-auto-bullet-variety';
-import { stockfishMove } from './strong-engine.js?v=20261114-continuous-review';
+import { stockfishMove } from './strong-engine.js?v=20261114-estimate-queue';
 import { chooseMove } from './engine-core.js?v=20261114-26';
 
 self.onmessage = ({ data }) => {

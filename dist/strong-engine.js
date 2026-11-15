@@ -1,11 +1,15 @@
 import { Chess } from './vendor/chess.js';
 
+let ratingStockfishWorker = null, ratingStockfishReady = false;
+
 // A separate classic worker keeps the GPL Stockfish distribution unmodified.
 export function stockfishMove(data, createWorker = url => new Worker(url), onProgress = null) {
   return new Promise((resolve, reject) => {
     const chess = new Chess(data.fen);
     if (chess.isGameOver()) return resolve({ move: null, engine: 'stockfish', score: chess.isCheckmate() ? -100000 : 0, mate: chess.isCheckmate() ? 0 : null });
-    const worker = createWorker(new URL('./vendor/stockfish/stockfish-17.1-lite-single-03e3232.js', import.meta.url));
+    const workerUrl = new URL('./vendor/stockfish/stockfish-17.1-lite-single-03e3232.js', import.meta.url);
+    const reused = !!(data.review && ratingStockfishWorker && ratingStockfishReady);
+    const worker = data.review ? (ratingStockfishWorker ||= createWorker(workerUrl)) : createWorker(workerUrl);
     const budget = Math.max(5, Math.floor(Number(data.budget ?? data.thinkMs) || 2200));
     const timer = setTimeout(() => finish(new Error('Stockfish did not respond. Please retry.')), budget + 15000);
     let depth = 0, nodes = 0, score = 0, mate = null;
@@ -13,23 +17,30 @@ export function stockfishMove(data, createWorker = url => new Worker(url), onPro
     const rounds = new Map();
     function finish(error, result) {
       clearTimeout(timer);
-      worker.terminate();
+      if (error || !data.review) {
+        worker.terminate();
+        if (worker === ratingStockfishWorker) { ratingStockfishWorker = null; ratingStockfishReady = false; }
+      } else { worker.onmessage = null; worker.onerror = null; }
       if (error) reject(error); else resolve(result);
+    }
+    function configure() {
+      worker.postMessage('setoption name Hash value 16');
+      const pieces = chess.board().flat().filter(Boolean);
+      const bareKing = ['w', 'b'].some(color => pieces.filter(p => p.color === color).every(p => p.type === 'k'));
+      worker.postMessage(`setoption name UCI_LimitStrength value ${data.review || bareKing || Number(data.level) === 7 ? 'false' : 'true'}`);
+      worker.postMessage(`setoption name UCI_Elo value ${Number(data.level) === 5 ? 2100 : 1800}`);
+      if (data.autoStrength != null) {
+        worker.postMessage('setoption name UCI_LimitStrength value false');
+        worker.postMessage(`setoption name MultiPV value ${Math.max(2, Math.min(12, Number(data.autoCandidates) || 12))}`);
+      }
+      worker.postMessage('isready');
     }
     worker.onerror = () => finish(new Error('Stockfish could not load. Please retry.'));
     worker.onmessage = ({ data: output }) => {
       for (const line of String(output).split('\n')) {
         if (line === 'uciok') {
-          worker.postMessage('setoption name Hash value 16');
-          const pieces = chess.board().flat().filter(Boolean);
-          const bareKing = ['w', 'b'].some(color => pieces.filter(p => p.color === color).every(p => p.type === 'k'));
-          worker.postMessage(`setoption name UCI_LimitStrength value ${data.review || bareKing || Number(data.level) === 7 ? 'false' : 'true'}`);
-          worker.postMessage(`setoption name UCI_Elo value ${Number(data.level) === 5 ? 2100 : 1800}`);
-          if (data.autoStrength != null) {
-            worker.postMessage('setoption name UCI_LimitStrength value false');
-            worker.postMessage(`setoption name MultiPV value ${Math.max(2, Math.min(12, Number(data.autoCandidates) || 12))}`);
-          }
-          worker.postMessage('isready');
+          if (data.review) ratingStockfishReady = true;
+          configure();
         } else if (line === 'readyok') {
           // Restore history so the engine sees repetitions and the fifty-move clock.
           let position = `position fen ${data.fen}`;
@@ -92,6 +103,6 @@ export function stockfishMove(data, createWorker = url => new Worker(url), onPro
         }
       }
     };
-    worker.postMessage('uci');
+    if (reused) configure(); else worker.postMessage('uci');
   });
 }
