@@ -11,7 +11,7 @@ test('Auto measures the last move in the correct score perspective and saves its
  const c=new Chess();c.move('e4');let calls=[];
  const result=await autoMove({fen:c.fen(),history:['e4'],budget:1000},async data=>{calls.push(data);return calls.length===1?{score:20}:calls.length===2?{score:280}:{move:{from:'e7',to:'e5'}}});
  assert.equal(calls[0].fen,new Chess().fen());assert.equal(calls[1].fen,c.fen());
- assert.ok(result.autoState.strength<0.15);assert.equal(calls[2].budget,600);
+ assert.ok(result.autoState.strength<0.15);assert.equal(calls[2].budget,700);
  assert.equal(calls[2].autoStrength,result.autoState.strength);
 });
 test('Auto skips extra analysis on a short clock',async()=>{

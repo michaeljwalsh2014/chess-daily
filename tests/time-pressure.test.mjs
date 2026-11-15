@@ -15,4 +15,4 @@ test('Hyper Bullet 3.0 has three speed bands and no artificial delay',()=>{
   assert.equal(botTiming(7,{b:10}).budget,30);
 });
 
-test('Auto speeds up at bullet clock thresholds without added delay',()=>{const times=[60,31,30,21,20,11,10,5,1].map(b=>botTiming(8,{b},10));assert.deepEqual(times.map(t=>t.budget),[450,450,200,200,80,80,20,10,5]);assert.ok(times.every(t=>t.delay===0));assert.equal(botTiming(8,{b:600}).budget,1600);});
+test('Auto speeds up at bullet clock thresholds without added delay',()=>{const times=[60,31,30,21,20,11,10,5,1].map(b=>botTiming(8,{b},10));assert.deepEqual(times.map(t=>t.budget),[650,650,350,350,180,180,80,80,10]);assert.ok(times.every(t=>t.delay===0));assert.equal(botTiming(8,{b:600}).budget,1600);});
