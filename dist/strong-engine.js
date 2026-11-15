@@ -2,6 +2,17 @@ import { Chess } from './vendor/chess.js';
 
 let ratingStockfishWorker = null, ratingStockfishReady = false;
 function createStockfishWorker(url) { return new Worker(url); }
+const captureValue={p:1,n:3,b:3,r:5,q:9,k:0};
+function freeMaterialCapture(chess,moveCode){
+  if(!moveCode||moveCode==='(none)')return null;
+  const legal=chess.moves({verbose:true});
+  const free=legal.filter(move=>move.captured&&move.captured!=='k').map(move=>{
+    const reply=new Chess(chess.fen());reply.move({from:move.from,to:move.to,...(move.promotion?{promotion:move.promotion}:{})});
+    const recaptured=reply.moves({verbose:true}).some(next=>next.to===move.to&&next.captured);
+    return {move,recaptured,value:captureValue[move.captured]||0};
+  }).filter(candidate=>!candidate.recaptured&&candidate.value>=3);
+  return free.sort((a,b)=>b.value-a.value||a.move.san.localeCompare(b.move.san))[0]?.move||null;
+}
 
 // A separate classic worker keeps the GPL Stockfish distribution unmodified.
 export function stockfishMove(data, createWorker = createStockfishWorker, onProgress = null) {
@@ -29,8 +40,8 @@ export function stockfishMove(data, createWorker = createStockfishWorker, onProg
       worker.postMessage('setoption name Hash value 16');
       const pieces = chess.board().flat().filter(Boolean);
       const bareKing = ['w', 'b'].some(color => pieces.filter(p => p.color === color).every(p => p.type === 'k'));
-      worker.postMessage(`setoption name UCI_LimitStrength value ${data.review || bareKing || Number(data.level) === 7 ? 'false' : 'true'}`);
-      worker.postMessage(`setoption name UCI_Elo value ${Number(data.level) === 5 ? 2100 : 1800}`);
+      worker.postMessage(`setoption name UCI_LimitStrength value ${data.review || bareKing || Number(data.level) === 7 || Number(data.level) === 11 ? 'false' : 'true'}`);
+      worker.postMessage(`setoption name UCI_Elo value ${Number(data.level) === 5 ? 2000 : Number(data.level) === 11 ? 3200 : 1800}`);
       if (data.autoStrength != null) {
         worker.postMessage('setoption name UCI_LimitStrength value false');
         worker.postMessage(`setoption name MultiPV value ${Math.max(2, Math.min(12, Number(data.autoCandidates) || 12))}`);
@@ -73,6 +84,7 @@ export function stockfishMove(data, createWorker = createStockfishWorker, onProg
           }
         } else if (line.startsWith('bestmove ')) {
           let code = line.split(/\s+/)[1];
+          if(!data.review&&[4,5].includes(Number(data.level))){const capture=freeMaterialCapture(chess,code);if(capture)code=capture.from+capture.to+(capture.promotion||'')}
           if (data.autoStrength != null && candidates.size) {
             const complete=[...rounds.entries()].sort((a,b)=>b[0]-a[0]).find(([,round])=>round.has(1)&&round.size>=Math.min(Math.max(2, Math.min(12, Number(data.autoCandidates) || 12)),chess.moves().length));
             const pool=complete?complete[1]:candidates;
