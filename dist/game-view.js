@@ -4,7 +4,7 @@ export function patchGameView(current,fresh,syncBoard){
   if(old.nodeType!==next.nodeType||old.nodeName!==next.nodeName){old.replaceWith(next.cloneNode(true));return}
   if(old.nodeType!==1){if(old.nodeValue!==next.nodeValue)old.nodeValue=next.nodeValue;return}
   if(old.classList.contains('board')&&next.classList.contains('board')){syncBoard(old,next);return}
-  for(const attr of [...old.attributes])if(!next.hasAttribute(attr.name))old.removeAttribute(attr.name);
+  for(const attr of [...old.attributes])if(!next.hasAttribute(attr.name)&&!(old.nodeName==='DETAILS'&&attr.name==='open'))old.removeAttribute(attr.name);
   for(const attr of next.attributes)if(old.getAttribute(attr.name)!==attr.value)old.setAttribute(attr.name,attr.value);
   const previous=[...old.childNodes],following=[...next.childNodes];
   for(let i=0;i<following.length;i++){
