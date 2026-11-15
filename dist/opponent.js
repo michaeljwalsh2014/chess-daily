@@ -1,9 +1,11 @@
+import {standardOpening} from './opening-book.js?v=1';
 import {autoMove} from './auto-engine.js?v=20261114-auto-bullet-variety';
 import { stockfishMove } from './strong-engine.js?v=20261114-29';
 import { chooseMove } from './engine-core.js?v=20261114-26';
 
 self.onmessage = ({ data }) => {
   try {
+    const opening=standardOpening(data);if(opening){self.postMessage({id:data.id,...opening});return}
     if (Number(data.level) === 8 && !data.review) {
       autoMove(data).then(result=>self.postMessage({id:data.id,...result})).catch(error=>self.postMessage({id:data.id,error:true,message:error.message}));
       return;
