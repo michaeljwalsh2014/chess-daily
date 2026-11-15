@@ -1,5 +1,5 @@
 import {Chess} from './vendor/chess.js';
-import {stockfishMove} from './strong-engine.js?v=20261114-opening-variety';
+import {stockfishMove} from './strong-engine.js?v=20261114-auto-bullet-variety';
 
 export function adaptAuto(previous, loss, autoAdvantage = 0) {
   const strength = Math.max(0, Math.min(1, Number(previous?.strength ?? 0.15)));
