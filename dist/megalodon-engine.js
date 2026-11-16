@@ -340,7 +340,7 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
   // Prefer a repeatedly successful learned move only when search considers it close.
   const learned=options.learning;
   if(completedDepth>0 && Math.abs(candidateRoots[0].score)<mateScore-100 && learned){
-    const promising=candidateRoots.filter(root=>{const stat=learned[root.code];return stat&&stat.count>=2&&stat.score>0&&candidateRoots[0].score-root.score<=40});
+    const promising=candidateRoots.filter(root=>{const stat=learned[root.code];return stat&&stat.count>=(stat.master?1:2)&&stat.score>0&&candidateRoots[0].score-root.score<=35});
     promising.sort((a,b)=>(learned[b.code].score/learned[b.code].count)-(learned[a.code].score/learned[a.code].count));
     if(promising.length)selected=promising[0];
   }
