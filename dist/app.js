@@ -12,7 +12,7 @@ let demonstrationSpeed=1;try{const speed=Number(localStorage.getItem('chess-demo
 import {ENDGAME_DEMOS} from './endgame-demos.js?v=20261114-endgame-ladder';
 import {moveGrade,evaluation,whiteScore,moveInsight} from './review-core.js?v=20261114-26';
 import {Chess} from './vendor/chess.js';
-import {LEVELS,CONTROLS,ENDGAMES,botTiming,resultMessage,executePremove,pendingPremoves,clearPremoves,queuePremove,premoveBoard,gameFrom,settleClock,commitMove,gameSummary,moveNotes} from './game-core.js?v=20261116-megalodon-training';
+import {LEVELS,CONTROLS,ENDGAMES,botTiming,resultMessage,executePremove,pendingPremoves,clearPremoves,queuePremove,premoveBoard,gameFrom,settleClock,commitMove,gameSummary,moveNotes} from './game-core.js?v=20261116-review-performance';
 import {SKILLS,LESSONS,clamp,startingTarget,newCoach,adapt,recommendSkill,pickPuzzle,positionKey,lessonFor,weekKey,localDate,normalize,validBackup} from './core.js?v=20261116-megalodon-training';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -100,7 +100,7 @@ $$('[data-home-style]').forEach(b=>b.onclick=()=>{state.homeStyle=b.dataset.home
 $$('[data-square]').forEach(b=>b.onclick=()=>view==='learn'?lessonSquare(b.dataset.square):trySquare(b.dataset.square));if($('#flip-board'))$('#flip-board').onclick=()=>{flipped=!flipped;render()};if($('#pause'))$('#pause').onclick=()=>{flushTime();paused=!paused;lastTick=Date.now();render()};if($('#resume-board'))$('#resume-board').onclick=()=>{paused=false;lastTick=Date.now();render()};if($('#hint'))$('#hint').onclick=()=>{flushTime();const a=state.active.puzzle;delete a.preview;a.hints=Math.min(2,a.hints+1);feedback=null;selectedSquare=null;save();render()};if($('#try-again'))$('#try-again').onclick=()=>{delete state.active.puzzle.preview;feedback=null;selectedSquare=null;save();render()};if($('#reveal'))$('#reveal').onclick=()=>{flushTime();delete state.active.puzzle.preview;finishPuzzle(true)};if($('#replay-back'))$('#replay-back').onclick=()=>{const p=puzzleMap.get(state.active.puzzle.id);replayStep=Math.max(0,(replayStep??p.moves.length)-1);render()};if($('#replay-next'))$('#replay-next').onclick=()=>{const p=puzzleMap.get(state.active.puzzle.id);replayStep=Math.min(p.moves.length,(replayStep??p.moves.length)+1);render()};$$('[data-note]').forEach(i=>i.oninput=()=>{state.active[i.dataset.note]=i.value;save()});if($('#save-session'))$('#save-session').onsubmit=e=>{e.preventDefault();saveSession()};$$('[data-filter]').forEach(b=>b.onclick=()=>{journalFilter=b.dataset.filter;render()});$$('[data-review]').forEach(b=>b.onclick=()=>{let [id,index]=b.dataset.review.split(':'),s=state.sessions.find(s=>String(s.id)===id);review={id:s.results[Number(index)].id,alternative:s.results[Number(index)].alternative,solution:s.results[Number(index)].solution,step:0};go('review')});if($('#review-back'))$('#review-back').onclick=()=>{review.step--;render()};if($('#review-next'))$('#review-next').onclick=()=>{review.step++;render()};$$('[data-export]').forEach(b=>b.onclick=exportData);$$('.restore-file').forEach(f=>f.onchange=importData);bindGame();bindArena();}
 
 const reviewAttempts=new Set();
-let engine=null,thinking=false,gameSelection=null,job=0,replyTimer=null,reviewGameIndex=null,gameStep=0,analysisWorker=null,analysisBusy=false,analysisToken=0,analysisStep=0,reviewIdleTimer=null,reviewIdleKey='',analysisMode='quick';
+let engine=null,thinking=false,gameSelection=null,job=0,replyTimer=null,reviewGameIndex=null,gameStep=0,analysisWorker=null,analysisBusy=false,analysisToken=0,analysisStep=0,reviewIdleTimer=null,reviewIdleKey='',analysisMode='quick',reviewAnalyzeAll=false;
 let ratingAnalysisWorker=null,ratingAnalysisToken=0,ratingAnalysisTimer=null,ratingAnalysisBusy=false,ratingAnalysisStatus='';
 function match(){return gameFrom(state.match)}
 function stopEngine(){job++;clearTimeout(replyTimer);engine?.terminate();engine=null;thinking=false;}
@@ -203,6 +203,21 @@ function reviewMoveList(g,rows){
  let lines='';for(let i=0;i<cells.length;i+=2)lines+=`<div class="review-move-row"><span>${firstNumber+i/2}.</span>${cells[i]}${cells[i+1]||'<span></span>'}</div>`;
  return `<section class="review-move-panel" aria-label="Game moves"><h3>Moves</h3><div class="review-move-list">${lines||'<p class="fine muted">No moves yet.</p>'}</div></section>`;
 }
+function reviewPerformance(g,rows){
+ const sides=[['w','You'],['b','Computer']],total=rows.length;
+ const analyzedFor=i=>i===0?g.startingAnalysis:g.analysis?.[i-1];
+ const cards=sides.map(([color,label])=>{
+  const entries=rows.map((row,index)=>({row,index,analysis:analyzedFor(index)})).filter(item=>item.row.color===color&&item.analysis?.reviewVersion===3);
+  const counts={best:0,good:0,decent:0,mistake:0,blunder:0};let loss=0;
+  entries.forEach(({row,analysis})=>{const grade=moveGrade(analysis,row.from+row.to+(row.promotion||''));counts[grade.kind]=(counts[grade.kind]||0)+1;loss+=Math.max(0,Number(analysis.loss)||0)});
+  const avg=entries.length?loss/entries.length:null;
+  const labelText=avg==null?'Analyzing…':avg<=35?'Very precise':avg<=80?'Solid game':avg<150?'Some inaccuracies':'Several costly moves';
+  const details=avg==null?`${entries.length} of ${rows.filter(r=>r.color===color).length} moves checked`:`${entries.length} moves · ${Math.round(avg)} centipawns average loss · ${counts.blunder} blunders, ${counts.mistake} mistakes`;
+  return `<article class="review-performance-card"><div class="review-performance-heading"><b>${label}</b><span>${color==='w'?'White':'Black'}</span></div><strong>${labelText}</strong><p>${details}</p></article>`;
+ }).join('');
+ const checked=rows.filter((_,i)=>analyzedFor(i)?.reviewVersion===3).length;
+ return `<section class="review-performance" aria-label="Game performance summary"><div class="review-performance-title"><h3>How each side played</h3><span>${checked} of ${total} moves analyzed</span></div><div class="review-performance-grid">${cards}</div><p class="fine muted">Quick computer analysis of each move; this is a game summary, not an official rating.</p></section>`;
+}
 function gamesPage(){
   const games=state.games||[];
   if(reviewGameIndex==null||!games[reviewGameIndex])return `<div class="simple-home"><div class="eyebrow">LEARN FROM YOUR OWN MOVES</div><h1>Game review.</h1><p>Replay a game and follow the evaluation bar as the position changes.</p>${games.length?games.map((g,i)=>`<div class="panel section-space row wrap"><div><b>${g.kind==='endgame'?'Endgame':'Computer game'} · ${esc(g.date)}</b><p class="fine">${g.result==='ended'?'Unfinished':g.result} · ${g.moves.length} half-moves · ${LEVELS[g.level]?.name||'Little Fish'} · ${controlInfo(g.control)?.name||'Untimed'}</p></div><button class="button secondary" data-open-game="${i}">Review game ${i+1}</button></div>`).reverse().join(''):'<div class="panel"><p>Your games will appear here automatically.</p><button class="button primary" data-goto="game">Play your first game</button></div>'}</div>`;
@@ -217,54 +232,56 @@ function gamesPage(){
   const shownColor=analysis?r?.color:previousColor;
   const suggestion=reviewSuggestion(c,gameStep===0?g.startingAnalysis:analysis);
   const ev=gameStep===0?evaluation({engine:'search',actualScore:0,actualMate:null},'w'):evaluation(shownAnalysis,shownColor);
-  return `<div class="review-room"><div class="row wrap"><button class="button secondary" id="all-games">All games</button><h2>Move ${gameStep} of ${g.moves.length}</h2><button class="button primary" id="complete-review">Mark reviewed</button></div><div class="review-layout simple-review"><div><div class="review-board-with-eval"><div class="eval-column" role="img" aria-label="${esc(ev.description)}: ${ev.text}"><span class="eval-number">${ev.text}</span><div class="eval-track"><div class="eval-white" style="height:${ev.white}%"></div></div><small>White</small></div><div class="game-board review-arrow-board">${boardHTML(c,{staticBoard:true,last:r})}${reviewArrowsHTML(suggestion)}</div></div><p class="fine" role="status">${suggestion?'Best move here: <b>'+esc(suggestion.san)+'</b> · green arrow':c.isGameOver()?'Game over':'Finding the best move…'}</p><div class="row wrap"><button class="button secondary small" id="review-draw-mode" aria-pressed="${reviewDrawMode}">${reviewDrawMode?'Drawing arrows: on':'Draw arrows'}</button><button class="button secondary small" id="review-clear-arrows">Clear my arrows</button>${gameStep>0?'<button class="button secondary small" id="review-alternative">What should have been played?</button>':''}</div><p class="fine muted">Right-click and drag to draw an arrow. Right-click a square to mark it. On touch screens, turn on Draw arrows first.</p>${reviewMoveList(g,summary.rows)}<div class="row wrap section-space"><button class="button secondary" id="game-prev" ${gameStep===0?'disabled':''}>Previous move</button><button class="button primary" id="game-next" ${gameStep===g.moves.length?'disabled':''}>Next move</button></div></div></div></div>`
+  return `<div class="review-room"><div class="row wrap"><button class="button secondary" id="all-games">All games</button><h2>Move ${gameStep} of ${g.moves.length}</h2><button class="button primary" id="complete-review">Mark reviewed</button></div>${reviewPerformance(g,summary.rows)}<div class="review-layout simple-review"><div><div class="review-board-with-eval"><div class="eval-column" role="img" aria-label="${esc(ev.description)}: ${ev.text}"><span class="eval-number">${ev.text}</span><div class="eval-track"><div class="eval-white" style="height:${ev.white}%"></div></div><small>White</small></div><div class="game-board review-arrow-board">${boardHTML(c,{staticBoard:true,last:r})}${reviewArrowsHTML(suggestion)}</div></div><p class="fine" role="status">${suggestion?'Best move here: <b>'+esc(suggestion.san)+'</b> · green arrow':c.isGameOver()?'Game over':'Finding the best move…'}</p><div class="row wrap"><button class="button secondary small" id="review-draw-mode" aria-pressed="${reviewDrawMode}">${reviewDrawMode?'Drawing arrows: on':'Draw arrows'}</button><button class="button secondary small" id="review-clear-arrows">Clear my arrows</button>${gameStep>0?'<button class="button secondary small" id="review-alternative">What should have been played?</button>':''}</div><p class="fine muted">Right-click and drag to draw an arrow. Right-click a square to mark it. On touch screens, turn on Draw arrows first.</p>${reviewMoveList(g,summary.rows)}<div class="row wrap section-space"><button class="button secondary" id="game-prev" ${gameStep===0?'disabled':''}>Previous move</button><button class="button primary" id="game-next" ${gameStep===g.moves.length?'disabled':''}>Next move</button></div></div></div></div>`
 }
-function cancelReviewAnalysis(){clearTimeout(reviewIdleTimer);reviewIdleTimer=null;reviewIdleKey='';if(analysisBusy)reviewAttempts.delete(reviewGameIndex+':'+analysisStep);analysisToken++;analysisWorker?.terminate();analysisWorker=null;analysisBusy=false;analysisStep=0}
+function cancelReviewAnalysis(){clearTimeout(reviewIdleTimer);reviewIdleTimer=null;reviewIdleKey='';reviewAnalyzeAll=false;if(analysisBusy)reviewAttempts.delete(reviewGameIndex+':'+analysisStep);analysisToken++;analysisWorker?.terminate();analysisWorker=null;analysisBusy=false;analysisStep=0}
 function startReviewAnalysis(gameIndex,step,chain=true,mode='quick'){
   const g=state.games?.[gameIndex],rows=g?moveNotes(g):[],row=step===0?{fen:gameFrom(g,0).fen()}:rows[step-1];
   if(!g||!row||analysisBusy)return;
   const key=gameIndex+':'+step;
   reviewAttempts.add(key);analysisBusy=true;analysisStep=step;analysisMode=mode;
   const id=++analysisToken;
-  analysisWorker=new Worker('opponent.js?v=20261116-megalodon-training',{type:'module'});
+  if(!analysisWorker)analysisWorker=new Worker('opponent.js?v=20261116-megalodon-training',{type:'module'});
   let lastProgress=0,lastStored=0;
   analysisWorker.onmessage=({data})=>{
     if(data.streaming&&Date.now()-lastProgress<250)return;lastProgress=Date.now();
     if(data.id!==analysisToken)return;
-    if(!data.streaming){analysisBusy=false;analysisWorker.terminate();analysisWorker=null;}
-    if(data.error)toast('Analysis could not finish. Try again.');
+    if(!data.streaming)analysisBusy=false;
+    if(data.error){toast('Analysis could not finish. Try again.');reviewAnalyzeAll=false;reviewIdleKey=gameIndex+':'+gameStep;}
     else{g.analysis||=[];const result={...data,reviewQuality:mode,analyzedAt:Date.now()};if(step===0)g.startingAnalysis=result;else g.analysis[step-1]=result;if(!data.streaming||Date.now()-lastStored>2000){save();lastStored=Date.now()}}
     if(view==='games'&&reviewGameIndex===gameIndex)render();
-    if(chain&&!data.streaming)queueReviewAnalysis(gameIndex);
+    if(chain&&!data.streaming&&!data.error)queueReviewAnalysis(gameIndex,reviewAnalyzeAll);
   };
   analysisWorker.onerror=()=>{
     if(id!==analysisToken)return;
     analysisBusy=false;analysisWorker?.terminate();analysisWorker=null;
     toast('Analysis could not load. Try again.');
     if(view==='games'&&reviewGameIndex===gameIndex)render();
-    if(chain)queueReviewAnalysis(gameIndex);
+    reviewAnalyzeAll=false;reviewIdleKey=gameIndex+':'+gameStep;
   };
   const moving=gameFrom(g,step).history({verbose:true}).at(-1);
   analysisWorker.postMessage({id,fen:row.fen,review:true,initialFen:g.fen,history:g.moves.slice(0,step),level:7,infinite:mode==='deep',budget:250});
   if(view==='games'&&reviewGameIndex===gameIndex)render();
 }
-function queueReviewAnalysis(gameIndex){
+function queueReviewAnalysis(gameIndex,allMoves=false){
   const g=state.games?.[gameIndex];if(!g)return;
-  const currentKey=gameIndex+':'+gameStep;
+  if(allMoves)reviewAnalyzeAll=true;
+  let targetStep=gameStep;
+  if(reviewAnalyzeAll){targetStep=-1;for(let step=0;step<g.moves.length;step++){const cached=step===0?g.startingAnalysis:g.analysis?.[step-1];if(cached?.reviewVersion!==3){targetStep=step;break}}if(targetStep<0)return}
+  const currentKey=gameIndex+(reviewAnalyzeAll?':all:'+targetStep:':'+gameStep);
   if(currentKey===reviewIdleKey)return;
   clearTimeout(reviewIdleTimer);
-  if(analysisBusy&&analysisStep!==gameStep)cancelReviewAnalysis();
+  if(analysisBusy){if(reviewAnalyzeAll)return;if(analysisStep!==gameStep)cancelReviewAnalysis()}
   reviewIdleKey=currentKey;
-  const targetStep=gameStep;
   reviewIdleTimer=setTimeout(()=>{
-    if(view!=='games'||reviewGameIndex!==gameIndex||gameStep!==targetStep||analysisBusy)return;
+    if(view!=='games'||reviewGameIndex!==gameIndex||!reviewAnalyzeAll&&gameStep!==targetStep||analysisBusy)return;
     const cached=targetStep===0?g.startingAnalysis:g.analysis?.[targetStep-1];
-    if(cached?.reviewVersion===3||gameFrom(g,targetStep).isGameOver())return;
-    startReviewAnalysis(gameIndex,targetStep,false,'quick');
+    if(cached?.reviewVersion===3||targetStep>0&&gameFrom(g,targetStep).isGameOver())return;
+    startReviewAnalysis(gameIndex,targetStep,reviewAnalyzeAll,'quick');
   },450);
 }
 function bindReview(){if($('#review-draw-mode'))$('#review-draw-mode').onclick=()=>{reviewDrawMode=!reviewDrawMode;render()};if($('#review-clear-arrows'))$('#review-clear-arrows').onclick=()=>{reviewDrawings.delete(reviewDrawingKey());render()};if($('#review-alternative'))$('#review-alternative').onclick=()=>{gameStep=Math.max(0,gameStep-1);render()};
-  $$('[data-open-game]').forEach(b=>b.onclick=()=>{cancelReviewAnalysis();clearTimeout(reviewIdleTimer);reviewIdleKey='';reviewAttempts.clear();reviewGameIndex=Number(b.dataset.openGame);gameStep=0;go('games')});
+  $$('[data-open-game]').forEach(b=>b.onclick=()=>{cancelReviewAnalysis();clearTimeout(reviewIdleTimer);reviewIdleKey='';reviewAttempts.clear();reviewGameIndex=Number(b.dataset.openGame);gameStep=0;reviewAnalyzeAll=true;go('games')});
   if($('#all-games'))$('#all-games').onclick=()=>{cancelReviewAnalysis();reviewGameIndex=null;render()};
   $$('[data-review-step]').forEach(button=>button.onclick=()=>{gameStep=Number(button.dataset.reviewStep);render()});
   const moveList=$('.review-move-list'),currentMove=moveList?.querySelector('[aria-current=step]');if(moveList&&currentMove)moveList.scrollTop=Math.max(0,currentMove.getBoundingClientRect().top-moveList.getBoundingClientRect().top-moveList.clientHeight/2);
@@ -273,7 +290,7 @@ function bindReview(){if($('#review-draw-mode'))$('#review-draw-mode').onclick=(
   if($('#game-jump'))$('#game-jump').onchange=e=>{gameStep=Number(e.target.value);render()};
   if($('#complete-review'))$('#complete-review').onclick=()=>{state.checks[dailyChecklistKey()]||={};state.checks[dailyChecklistKey()].review=true;state.games[reviewGameIndex].reviewed=true;save();cancelReviewAnalysis();go('dashboard');toast('Game reviewed. Take one lesson into your next game.')};
   if($('#analyze-move'))$('#analyze-move').onclick=()=>{if(analysisBusy)return;startReviewAnalysis(reviewGameIndex,gameStep,false)};
-  if(view==='games'&&reviewGameIndex!=null)queueReviewAnalysis(reviewGameIndex);
+  if(view==='games'&&reviewGameIndex!=null)queueReviewAnalysis(reviewGameIndex,reviewAnalyzeAll);
 }
 function trainingCoach(){if(!state.trainingCoach){const coaches=Object.values(state.coach||newCoach(currentRating()));state.trainingCoach={...coaches[0],target:Math.round(coaches.reduce((n,c)=>n+c.target,0)/coaches.length),fast:0,struggles:0,total:0,solved:0};state.trainingBaseline=state.trainingCoach.target}return state.trainingCoach}
 function adjustChallenge(delta){const c=trainingCoach();const previous=state.active?.puzzle?puzzleMap.get(state.active.puzzle.id)?.rating:null;c.target=clamp((delta>0?Math.max(c.target,previous||0):Math.min(c.target,previous||c.target))+delta,400,2500);c.fast=0;c.struggles=0;c.reason='You adjusted the challenge. Automatic adjustment is still on.';state.challengeDirection=delta>0?'up':'down';if(state.active?.puzzle&&!state.active.puzzle.done&&!state.active.puzzle.moves.length&&!state.active.puzzle.mistakes.length&&!state.active.puzzle.hints){newPuzzle();}save();render();toast('Next fresh puzzle targets '+c.target+'. Automatic adjustment stays on.')}
