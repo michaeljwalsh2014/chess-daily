@@ -16,7 +16,8 @@ test('Megalodon finds immediate checkmate and returns legal moves',()=>{
 
 test('Megalodon speeds up when low on time',()=>{
   assert.equal(LEVELS[12].name,'Megalodon');
-  assert.equal(botTiming(12,{b:600}).budget,5000);
+  assert.equal(LEVELS[12].depth,30);
+  assert.equal(botTiming(12,{b:600}).budget,48000);
   assert.ok(botTiming(12,{b:10}).budget<botTiming(12,{b:60}).budget);
 });
 

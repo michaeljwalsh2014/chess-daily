@@ -1,12 +1,12 @@
 import {standardOpening} from './opening-book.js?v=20261115-megalodon';
-import {chooseMove as chooseMegalodonMove} from './megalodon-engine.js?v=20261115-megalodon';
+import {chooseMove as chooseMegalodonMove} from './megalodon-engine.js?v=20261115-longthink';
 import {autoMove} from './auto-engine.js?v=20261114-auto-bullet-variety';
 import { stockfishMove } from './strong-engine.js?v=20261115-leviathan-2400';
 import { chooseMove } from './engine-core.js?v=20261115-bot-balance';
 
 self.onmessage = ({ data }) => {
   try {
-    const opening=Number(data.level)===12&&data.learning?null:standardOpening(data);if(opening){self.postMessage({id:data.id,...opening});return}
+    const opening=Number(data.level)===12?null:standardOpening(data);if(opening){self.postMessage({id:data.id,...opening});return}
     if (Number(data.level) === 8 && !data.review) {
       autoMove(data).then(result=>self.postMessage({id:data.id,...result})).catch(error=>self.postMessage({id:data.id,error:true,message:error.message}));
       return;

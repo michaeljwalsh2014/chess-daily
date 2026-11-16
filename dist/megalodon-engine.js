@@ -1,5 +1,5 @@
 import { Chess } from './vendor/chess.js';
-import { LEVELS } from './game-core.js?v=20261115-megalodon';
+import { LEVELS } from './game-core.js?v=20261115-longthink';
 
 const pieceValue = { p: 100, n: 325, b: 335, r: 500, q: 950, k: 0 };
 const mateScore = 100000;
@@ -176,6 +176,7 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
     if (chess.isDraw()) return 0;
     if (depth <= 0) return quiescence(alpha, beta, ply);
 
+    const inCheck = chess.isCheck();
     const positionKey = key();
     const alphaOriginal = alpha;
     const cached = table.get(positionKey);
@@ -186,17 +187,36 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
       if (alpha >= beta) return cached.score;
     }
 
-    const inCheck = chess.isCheck();
     const moves = orderMoves(chess.moves({ verbose: true }), cached?.move, ply);
     if (!moves.length) return inCheck ? -mateScore + ply : 0;
     let bestScore = -Infinity;
     let bestMove = null;
-    for (const move of moves) {
+    for (let moveIndex = 0; moveIndex < moves.length; moveIndex++) {
+      const move = moves[moveIndex];
       const code = moveCode(move);
       chess.move(move);
       let score;
       try {
-        score = -search(depth - 1, -beta, -alpha, ply + 1);
+        // Principal-variation search spends a full window on the first move and
+        // uses a cheap null window for alternatives. Late quiet moves get a
+        // small depth reduction, then a full-depth re-search if they challenge
+        // the current best. Checks and captures are never reduced.
+        const quiet = !inCheck && !isCapture(move) && !move.promotion && !chess.isCheck();
+        const childDepth = depth - 1;
+        const reduction = quiet && depth >= 3 && moveIndex >= 2
+          ? (depth >= 5 && moveIndex >= 6 ? 2 : 1)
+          : 0;
+        if (moveIndex === 0) {
+          score = -search(childDepth, -beta, -alpha, ply + 1);
+        } else {
+          score = -search(childDepth - reduction, -alpha - 1, -alpha, ply + 1);
+          if (reduction && score > alpha) {
+            score = -search(childDepth, -alpha - 1, -alpha, ply + 1);
+          }
+          if (score > alpha && score < beta) {
+            score = -search(childDepth, -beta, -alpha, ply + 1);
+          }
+        }
       } finally {
         chess.undo();
       }
