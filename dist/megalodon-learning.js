@@ -12,7 +12,6 @@ export function learnGame(previous,record){
     const score=record.side&&record.side!=='both'?(record.result==='win'?1:record.result==='loss'?-1:0):(record.result==='draw'?0:(record.result==='win'?(color==='w'?1:-1):(color==='b'?1:-1)));
     const bucket=data.positions[key]||(data.positions[key]={});const stat=bucket[code]||(bucket[code]={count:0,score:0});
     stat.count=Math.min(1000,stat.count+1);stat.score=Math.max(-1000,Math.min(1000,stat.score+score));
-    if(score>0)stat.wins=(stat.wins||0)+1;else if(score<0)stat.losses=(stat.losses||0)+1;else stat.draws=(stat.draws||0)+1;
   }}catch{return previous||{positions:{},games:0}}
   const keys=Object.keys(data.positions);for(const key of keys.slice(0,Math.max(0,keys.length-4000)))delete data.positions[key];
   data.games=(Number(data.games)||0)+1;return data;
