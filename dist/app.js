@@ -205,7 +205,7 @@ function reviewMoveList(g,rows){
 }
 function reviewPerformance(g,rows){
  const sides=[['w','You'],['b','Computer']],total=rows.length;
- const analyzedFor=i=>i===0?g.startingAnalysis:g.analysis?.[i-1];
+ const analyzedFor=i=>{const before=i===0?g.startingAnalysis:g.analysis?.[i-1],after=g.analysis?.[i];if(before?.reviewVersion!==3||after?.reviewVersion!==3||!Number.isFinite(before.score)||!Number.isFinite(after.score))return null;return {...before,loss:Math.max(0,before.score+after.score)};};
  const cards=sides.map(([color,label])=>{
   const entries=rows.map((row,index)=>({row,index,analysis:analyzedFor(index)})).filter(item=>item.row.color===color&&item.analysis?.reviewVersion===3);
   const counts={best:0,good:0,decent:0,mistake:0,blunder:0};let loss=0;
@@ -267,7 +267,7 @@ function queueReviewAnalysis(gameIndex,allMoves=false){
   const g=state.games?.[gameIndex];if(!g)return;
   if(allMoves)reviewAnalyzeAll=true;
   let targetStep=gameStep;
-  if(reviewAnalyzeAll){targetStep=-1;for(let step=0;step<g.moves.length;step++){const cached=step===0?g.startingAnalysis:g.analysis?.[step-1];if(cached?.reviewVersion!==3){targetStep=step;break}}if(targetStep<0)return}
+  if(reviewAnalyzeAll){targetStep=-1;for(let step=0;step<=g.moves.length;step++){const cached=step===0?g.startingAnalysis:g.analysis?.[step-1];if(cached?.reviewVersion!==3){targetStep=step;break}}if(targetStep<0)return}
   const currentKey=gameIndex+(reviewAnalyzeAll?':all:'+targetStep:':'+gameStep);
   if(currentKey===reviewIdleKey)return;
   clearTimeout(reviewIdleTimer);
@@ -276,7 +276,7 @@ function queueReviewAnalysis(gameIndex,allMoves=false){
   reviewIdleTimer=setTimeout(()=>{
     if(view!=='games'||reviewGameIndex!==gameIndex||!reviewAnalyzeAll&&gameStep!==targetStep||analysisBusy)return;
     const cached=targetStep===0?g.startingAnalysis:g.analysis?.[targetStep-1];
-    if(cached?.reviewVersion===3||targetStep>0&&gameFrom(g,targetStep).isGameOver())return;
+    if(cached?.reviewVersion===3)return; if(gameFrom(g,targetStep).isGameOver()){const c=gameFrom(g,targetStep),result={engine:'stockfish',reviewVersion:3,score:c.isCheckmate()?-100000:0};if(targetStep===0)g.startingAnalysis=result;else{g.analysis||=[];g.analysis[targetStep-1]=result}save();reviewIdleKey='';render();return;}
     startReviewAnalysis(gameIndex,targetStep,reviewAnalyzeAll,'quick');
   },450);
 }
