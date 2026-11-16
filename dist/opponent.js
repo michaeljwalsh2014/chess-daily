@@ -1,6 +1,4 @@
 import {standardOpening} from './opening-book.js?v=20261116-megalodon-training';
-import {chooseMove as chooseMegalodonMove} from './megalodon-engine.js?v=20261116-megalodon-training';
-import {chooseMove as chooseMegalodonV2Move} from './megalodon-v2-engine.js?v=1';
 import {chooseMove as chooseMegalodonV3Move} from './megalodon-v3-engine.js?v=1';
 import {autoMove} from './auto-engine.js?v=20261114-auto-bullet-variety';
 import { stockfishMove } from './strong-engine.js?v=20261116-megalodon-v3';
@@ -8,7 +6,7 @@ import { chooseMove } from './engine-core.js?v=20261115-bot-balance';
 
 self.onmessage = ({ data }) => {
   try {
-    const opening=Number(data.level)===14?null:standardOpening(data);if(opening){self.postMessage({id:data.id,...opening});return}
+    const opening=[12,13,14].includes(Number(data.level))?null:standardOpening(data);if(opening){self.postMessage({id:data.id,...opening});return}
     if (Number(data.level) === 8 && !data.review) {
       autoMove(data).then(result=>self.postMessage({id:data.id,...result})).catch(error=>self.postMessage({id:data.id,error:true,message:error.message}));
       return;
@@ -23,7 +21,7 @@ self.onmessage = ({ data }) => {
     }
     const chosen = data.chosenSan ?? data.chosen ?? data.chosenUci ?? null;
     const budget = data.budget ?? data.thinkMs ?? null;
-    self.postMessage({ id: data.id, ...(Number(data.level)===14?chooseMegalodonV3Move:Number(data.level)===13?chooseMegalodonV2Move:Number(data.level)===12?chooseMegalodonMove:chooseMove)(data.fen, Number(data.level) || 2, chosen, budget, { history: data.history || [], initialFen: data.initialFen, variety: data.variety, seed: data.seed, learning: data.learning }) });
+    self.postMessage({ id: data.id, ...([12,13,14].includes(Number(data.level))?chooseMegalodonV3Move:chooseMove)(data.fen, Number(data.level) || 2, chosen, budget, { history: data.history || [], initialFen: data.initialFen, variety: data.variety, seed: data.seed, learning: data.learning }) });
   } catch (error) {
     self.postMessage({ id: data.id, error: true, message: String(error?.message || 'Search failed.') });
   }
