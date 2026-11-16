@@ -2,6 +2,14 @@ import {Chess} from './vendor/chess.js';
 
 // Store results by position and move, not by move number, so either color can learn.
 export function positionKey(fen){return fen.split(' ').slice(0,4).join(' ')}
+export function learnMoveChoice(previous,fen,move,outcome){
+  if(!fen||!move||!Number.isFinite(outcome)||!outcome)return previous||{positions:{},games:0};
+  const data=structuredClone(previous||{positions:{},games:0});data.positions||={};
+  const key=positionKey(fen),bucket=data.positions[key]||(data.positions[key]={}),stat=bucket[move]||(bucket[move]={count:0,score:0});
+  stat.count=Math.min(1000,stat.count+1);stat.score=Math.max(-1000,Math.min(1000,stat.score+Math.sign(outcome)));
+  const keys=Object.keys(data.positions);for(const old of keys.slice(0,Math.max(0,keys.length-4000)))delete data.positions[old];
+  data.puzzleMoves=(Number(data.puzzleMoves)||0)+1;return data;
+}
 export function learnGame(previous,record){
   if(!['win','loss','draw'].includes(record.result)||!Array.isArray(record.moves))return previous||{positions:{},games:0};
   const data=structuredClone(previous||{positions:{},games:0});data.positions||={};
@@ -57,5 +65,18 @@ export function learnPgn(previous,pgn){
   const c=new Chess();c.loadPgn(pgn);const headers=c.getHeaders(),result=headers.Result;
   if(!['1-0','0-1','1/2-1/2'].includes(result))throw new Error('Choose a finished game with a result.');
   const moves=c.history(),initialFen=headers.FEN;if(!moves.length)throw new Error('The game has no moves.');
+  const v3Side=headers.White==='Megalodon V3'?'w':headers.Black==='Megalodon V3'?'b':null;
+  if(v3Side){const v3Result=result==='1/2-1/2'?'draw':(result==='1-0')===(v3Side==='w')?'win':'loss';return learnGame(previous,{moves,fen:initialFen,result:v3Result,side:v3Side})}
   return learnGame(previous,{moves,fen:initialFen,result:result==='1-0'?'win':result==='0-1'?'loss':'draw'});
+}
+
+// Import a multi-game PGN collection in one pass while keeping valid games if
+// an unrelated game in the collection is unfinished or malformed.
+export function learnPgnBatch(previous,pgn){
+  const chunks=String(pgn).trim().split(/(?=^\[Event\s)/m).filter(chunk=>chunk.trim());
+  if(!chunks.length)throw new Error('The PGN file contains no games.');
+  let learning=previous||{positions:{},games:0},imported=0,skipped=0;
+  for(const chunk of chunks){try{const next=learnPgn(learning,chunk);if(next===learning)throw new Error();learning=next;imported++}catch{skipped++}}
+  if(!imported)throw new Error('No finished games could be read.');
+  return {learning,imported,skipped};
 }
