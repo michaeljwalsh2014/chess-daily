@@ -1,5 +1,5 @@
 import {standardOpening} from './opening-book.js?v=20261115-megalodon';
-import {chooseMove as chooseMegalodonMove} from './megalodon-engine.js?v=20261115-longthink';
+import {chooseMove as chooseMegalodonMove} from './megalodon-engine.js?v=20261115-megalodon-20s';
 import {autoMove} from './auto-engine.js?v=20261114-auto-bullet-variety';
 import { stockfishMove } from './strong-engine.js?v=20261115-leviathan-2400';
 import { chooseMove } from './engine-core.js?v=20261115-bot-balance';
