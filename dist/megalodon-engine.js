@@ -118,6 +118,21 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
     return chess.fen();
   }
 
+  // Keep mate distances independent of the ply where a position entered the
+  // transposition table. Otherwise the same forced mate can look longer or
+  // shorter depending on which branch found it first.
+  function scoreToTable(score, ply) {
+    if (score > mateScore - 1000) return score + ply;
+    if (score < -mateScore + 1000) return score - ply;
+    return score;
+  }
+
+  function scoreFromTable(score, ply) {
+    if (score > mateScore - 1000) return score - ply;
+    if (score < -mateScore + 1000) return score + ply;
+    return score;
+  }
+
   function orderMoves(moves, ttMove, ply) {
     return moves.sort((a, b) => {
       const score = move => {
@@ -179,12 +194,14 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
     const inCheck = chess.isCheck();
     const positionKey = key();
     const alphaOriginal = alpha;
+    const betaOriginal = beta;
     const cached = table.get(positionKey);
+    const cachedScore = cached ? scoreFromTable(cached.score, ply) : null;
     if (cached && cached.depth >= depth) {
-      if (cached.flag === 'exact') return cached.score;
-      if (cached.flag === 'lower') alpha = Math.max(alpha, cached.score);
-      else if (cached.flag === 'upper') beta = Math.min(beta, cached.score);
-      if (alpha >= beta) return cached.score;
+      if (cached.flag === 'exact') return cachedScore;
+      if (cached.flag === 'lower') alpha = Math.max(alpha, cachedScore);
+      else if (cached.flag === 'upper') beta = Math.min(beta, cachedScore);
+      if (alpha >= beta) return cachedScore;
     }
 
     const moves = orderMoves(chess.moves({ verbose: true }), cached?.move, ply);
@@ -239,9 +256,9 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
     if (table.size >= maxTableEntries) table.clear();
     table.set(positionKey, {
       depth,
-      score: bestScore,
+      score: scoreToTable(bestScore, ply),
       move: bestMove,
-      flag: bestScore <= alphaOriginal ? 'upper' : bestScore >= beta ? 'lower' : 'exact',
+      flag: bestScore <= alphaOriginal ? 'upper' : bestScore >= betaOriginal ? 'lower' : 'exact',
     });
     return bestScore;
   }
