@@ -32,3 +32,31 @@ test('queued destinations are highlighted while the knight stays on its current 
   assert.match(square(canceled,'g1'),/White knight.*wn\.svg/);
   assert.doesNotMatch(square(canceled,'f3'),/premove/);
 });
+
+test('a quick drop uses the release square even without a pointermove',()=>{
+  const source=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+  const start=source.indexOf("document.addEventListener('pointerup',e=>{");
+  const end=source.indexOf("document.addEventListener('pointercancel'",start);
+  const board={},origin={dataset:{square:'g1'}},drop={dataset:{square:'f3'},closest:()=>board};
+  const dragGesture={pointer:1,board,square:origin,from:'g1',x:0,y:0};
+  let onRelease,move;
+  const ctx=vm.createContext({
+    document:{addEventListener(_,handler){onRelease=handler},elementFromPoint:()=>({closest:()=>drop})},
+    dragGesture,clearDrag:()=>dragGesture,view:'game',suppressBoardClick:false,dragDropInProgress:false,
+    gameSelection:null,setTimeout(){},handleGameSquare(to){move={from:ctx.gameSelection,to}},
+  });
+  vm.runInContext(source.slice(start,end),ctx);
+  onRelease({pointerId:1,clientX:10,clientY:12});
+  assert.deepEqual(move,{from:'g1',to:'f3'});
+  assert.equal(ctx.suppressBoardClick,true);
+});
+
+test('the held piece follows its played premove while capture stays on the original square',()=>{
+  const source=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+  const originalSquare={},dragGesture={from:'g1',piece:'n',square:originalSquare};
+  const ctx=vm.createContext({dragGesture,view:'game'});
+  vm.runInContext(source.slice(source.indexOf('function followPlayedPremove('),source.indexOf('function renderGameDuringDrag(')),ctx);
+  vm.runInContext("followPlayedPremove({from:'g1',to:'f3'},'Nf3')",ctx);
+  assert.equal(dragGesture.from,'f3');
+  assert.equal(dragGesture.square,originalSquare);
+});
