@@ -34,7 +34,8 @@ export function syncBoard(oldBoard,newBoard){
   const freshImage=fresh.querySelector('img'),src=freshImage?.getAttribute('src');
   const existing=old.querySelector('img');
   const image=src?(existing?.getAttribute('src')===src&&!used.has(existing)?existing:images.find(img=>!used.has(img)&&img.getAttribute('src')===src)):null;
-  if(image){used.add(image);freshImage.replaceWith(image)}
-  old.replaceChildren(...fresh.childNodes);
+  if(image)used.add(image);
+  // Keep live images out of the template's inert document during the update.
+  old.replaceChildren(...[...fresh.childNodes].map(node=>node===freshImage&&image?image:node));
  });
 }

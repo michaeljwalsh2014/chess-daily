@@ -1,7 +1,34 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {executePremove,commitMove,gameFrom} from '../dist/game-core.js';
+import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import {executePremove,commitMove,gameFrom,pendingPremoves,premoveBoard,queuePremove,clearPremoves} from '../dist/game-core.js';
 test('queued move waits for the computer reply and then executes once',()=>{const m={moves:['e4'],turn:'b',premove:{from:'g1',to:'f3'}};assert.equal(executePremove(m),false);assert.deepEqual(m.premove,{from:'g1',to:'f3'});commitMove(m,'e5');assert.ok(executePremove(m));assert.deepEqual(m.moves,['e4','e5','Nf3']);assert.equal(executePremove(m),false)});
 test('premove is cancelled when its piece was captured',()=>{const m={fen:'4k3/8/8/8/8/8/r7/N3K3 b - - 0 1',moves:[],turn:'b',premove:{from:'a1',to:'b3'}};commitMove(m,'Rxa1+');assert.equal(executePremove(m),false);assert.equal(m.premove,undefined);assert.equal(gameFrom(m).turn(),'w')});
 test('a premove can capture a piece that replaced your piece on the destination',()=>{const m={fen:'4kr2/8/8/8/8/5P2/8/4K1N1 b - - 0 1',moves:[],turn:'b',premove:{from:'g1',to:'f3',promotion:'q'}};commitMove(m,'Rxf3');assert.ok(executePremove(m));assert.equal(gameFrom(m).get('f3').type,'n');assert.equal(gameFrom(m).get('f3').color,'w')});
 test('a premove is canceled when the opponent puts the king in check',()=>{const m={fen:'4k3/8/8/8/8/8/5r2/R3K3 b Q - 0 1',moves:[],turn:'b',premove:{from:'a1',to:'a2'}};commitMove(m,'Re2+');assert.equal(executePremove(m),false);assert.equal(m.premove,undefined)});
 test('multiple premoves execute one per reply and can move the same piece again',async()=>{const {queuePremove,premoveBoard,pendingPremoves}=await import('../dist/game-core.js');const m={moves:['e4'],turn:'b'};queuePremove(m,{from:'g1',to:'f3'});queuePremove(m,{from:'f3',to:'g5'});assert.equal(premoveBoard(m).get('g5').type,'n');assert.equal(gameFrom(m).get('g1').type,'n');commitMove(m,'e5');assert.ok(executePremove(m));assert.equal(pendingPremoves(m).length,1);assert.equal(executePremove(m),false);commitMove(m,'Nc6');assert.ok(executePremove(m));assert.deepEqual(m.moves,['e4','e5','Nf3','Nc6','Ng5']);assert.equal(pendingPremoves(m).length,0)});
 test('an illegal next premove cancels the entire remaining sequence',async()=>{const {queuePremove,pendingPremoves}=await import('../dist/game-core.js');const m={fen:'4k3/8/8/8/8/8/r7/N3K3 b - - 0 1',moves:[],turn:'b'};queuePremove(m,{from:'a1',to:'b3'});queuePremove(m,{from:'b3',to:'c5'});commitMove(m,'Rxa1+');assert.equal(executePremove(m),false);assert.equal(pendingPremoves(m).length,0)});
+
+test('queued destinations are highlighted while the knight stays on its current square',()=>{
+  const source=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+  const m={moves:['e4'],turn:'b'};
+  const ctx=vm.createContext({
+    state:{match:m},match:()=>gameFrom(m),pendingPremoves,premoveBoard,queuePremove,
+    liveHistoryStep:null,selectedSquare:null,gameSelection:null,premovesEnabled:true,
+    dragDropInProgress:false,settleMatch:()=>false,save(){},render(){},renderGameBoardSelection(){},
+    esc:String,names:{n:'knight'},pieceTheme:'classic',pieceURL:(_,color,type)=>color+type+'.svg',
+  });
+  vm.runInContext(source.slice(source.indexOf('function boardHTML('),source.indexOf('function sessionHeader(')),ctx);
+  vm.runInContext(source.slice(source.indexOf('function premoveSource('),source.indexOf('function bindGameBoard(')),ctx);
+  const board=()=>vm.runInContext('boardHTML(match(),{interactive:true,premoves:pendingPremoves(state.match)})',ctx);
+  const square=(html,name)=>html.match(new RegExp('<button[^>]+data-square="'+name+'"[^>]*>.*?</button>'))?.[0];
+  vm.runInContext("handleGameSquare('g1');handleGameSquare('f3');handleGameSquare('g1');handleGameSquare('g5');",ctx);
+  assert.deepEqual(pendingPremoves(m).map(({from,to})=>from+to),['g1f3','f3g5']);
+  const queued=board();
+  assert.match(square(queued,'g1'),/White knight.*wn\.svg/);
+  assert.match(square(queued,'f3'),/empty, premove destination/);
+  assert.match(square(queued,'g5'),/empty, premove destination/);
+  clearPremoves(m);
+  const canceled=board();
+  assert.match(square(canceled,'g1'),/White knight.*wn\.svg/);
+  assert.doesNotMatch(square(canceled,'f3'),/premove/);
+});
