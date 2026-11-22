@@ -21,6 +21,21 @@ test('Megalodon speeds up when low on time',()=>{
   assert.ok(botTiming(12,{b:10}).budget<botTiming(12,{b:60}).budget);
 });
 
+test('Megalodon saves clock time early and allows deeper searches later',()=>{
+  for(const level of [12,13,14]){
+    const budget=(plies,seconds=600)=>botTiming(level,{b:seconds},0,plies).budget;
+    assert.equal(budget(0),3000);
+    assert.equal(budget(7),3000);
+    assert.equal(budget(8),6000);
+    assert.equal(budget(15),6000);
+    assert.equal(budget(16),12000);
+    assert.equal(budget(31),12000);
+    assert.equal(budget(32),20000);
+    assert.equal(budget(7,10),800);
+    assert.equal(budget(40,60),4800);
+  }
+});
+
 test('Megalodon appears only for ten-minute games',()=>{
   const source=fs.readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
   const fragment=source.slice(source.indexOf('const eloLabels='),source.indexOf('function refreshBotSelect('));
