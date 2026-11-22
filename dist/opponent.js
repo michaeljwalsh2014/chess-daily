@@ -2,7 +2,7 @@ import {standardOpening} from './opening-book.js?v=20261116-megalodon-training';
 import {chooseMove as chooseMegalodonV3Move} from './megalodon-v3-engine.js?v=1';
 import {autoMove} from './auto-engine.js?v=20261114-auto-bullet-variety';
 import { stockfishMove } from './strong-engine.js?v=20261116-megalodon-v3';
-import { chooseMove } from './engine-core.js?v=20261115-bot-balance';
+import { chooseMove } from './engine-core.js?v=20261122-big-fish-1000';
 
 self.onmessage = ({ data }) => {
   try {

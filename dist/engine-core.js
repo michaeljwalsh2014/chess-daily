@@ -275,6 +275,15 @@ export function chooseMove(fen, level = 2, chosen = null, budgetOverride = null,
     pool = candidateRoots.filter(root => candidateRoots[0].score - root.score <= 180).slice(0, 8);
   }
   let selected = level === 1 || level === 9 ? pool[Math.floor(Math.random() * pool.length)] : candidateRoots[0];
+  // Big Fish occasionally overlooks a tactic after leaving its opening book.
+  if (level === 3 && best.score < mateScore - 64) {
+    const oversightChance = 0.25;
+    const roll = seededFraction(seed, fen);
+    if (roll < oversightChance) {
+      const index = Math.floor((roll / oversightChance) * candidateRoots.length);
+      selected = candidateRoots[index];
+    }
+  }
   if (level === 2) {
     const nearBest = candidateRoots.filter(root => candidateRoots[0].score - root.score <= 35).slice(0, 2);
     if (nearBest.length > 1) selected = nearBest[Math.floor(seededFraction(seed, fen) * nearBest.length)];
