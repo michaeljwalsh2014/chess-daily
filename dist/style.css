@@ -254,3 +254,20 @@ body.dark-mode {
 
 .progress-card h2{margin:0;font-size:1.2rem}.progress-comparison{display:flex;flex-wrap:wrap;gap:12px 32px;margin:16px 0 4px}.progress-comparison dt{font-size:.875rem;color:var(--muted)}.progress-comparison dd{margin:4px 0 0}.progress-card .progress-change{font-weight:750;font-size:1.15rem;color:var(--deep)}
 @media(prefers-reduced-motion:reduce){.rating-analysis-progress>span{transition:none}}
+
+.lesson-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px 32px;flex-wrap:wrap}
+.lesson-heading>div:first-child{flex:1 1 420px;min-width:0}
+.lesson-actions,.lesson-browser-controls{display:flex;flex-wrap:wrap;gap:8px}
+.lesson-controls .row.wrap{justify-content:flex-start;gap:10px}
+.lesson-browser{width:min(920px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:clamp(14px,3vw,24px);border:1px solid var(--line);border-radius:16px;background:var(--white);color:var(--ink)}
+.lesson-browser::backdrop{background:#101b16a0}
+.lesson-browser-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.lesson-browser-header h2{margin:0;font-size:clamp(18px,3vw,24px)}
+.lesson-browser-controls{margin-bottom:8px}
+.lesson-carousel{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:clamp(142px,23%,190px);gap:12px;padding:4px 3px 12px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:3px}
+.lesson-card{display:flex;flex-direction:column;gap:8px;text-align:left;padding:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-size:.875rem;font-weight:650;scroll-snap-align:start}
+.lesson-card:hover,.lesson-card[aria-current]{border-color:var(--green);background:var(--soft)}
+.lesson-preview{display:grid;width:100%;aspect-ratio:1;grid-template:repeat(8,minmax(0,1fr))/repeat(8,minmax(0,1fr));overflow:hidden;border-radius:5px}
+.lesson-preview>span{display:grid;place-items:center;background:#f2e4cb}
+.lesson-preview>span.dark{background:#bd9069}
+.lesson-preview img{width:90%;height:90%;object-fit:contain}
