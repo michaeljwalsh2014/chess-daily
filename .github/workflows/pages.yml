@@ -27,6 +27,9 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+      # Pages can take a few seconds to index a newly uploaded artifact.
+      - name: Allow Pages artifact to become available
+        run: sleep 30
       - name: Publish
         id: deployment
         uses: actions/deploy-pages@v4
