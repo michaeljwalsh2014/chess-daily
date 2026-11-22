@@ -376,7 +376,7 @@ document.addEventListener('pointerdown',e=>{
  ghost.className='drag-piece';
  ghost.style.width=rect.width+'px';
  ghost.style.height=rect.height+'px';
- dragGesture={preview:ghost,left:rect.left,top:rect.top,from,piece:held.type,x:e.clientX,y:e.clientY,board:square.closest('.board'),square,pointer:e.pointerId};
+ dragGesture={preview:ghost,left:rect.left,top:rect.top,centerX:rect.left+rect.width/2,centerY:rect.top+rect.height/2,from,piece:held.type,x:e.clientX,y:e.clientY,board:square.closest('.board'),square,pointer:e.pointerId};
  const gesture=dragGesture;
  square.setPointerCapture(e.pointerId);
  ghost.decode().then(()=>{
@@ -421,16 +421,30 @@ function clearDrag(){
  }
  return d;
 }
+function dragDestination(d,event){
+ const squareAt=(x,y)=>{
+  const square=document.elementFromPoint(x,y)?.closest('.square[data-square]');
+  return square?.closest('.board')===d.board?square:null;
+ };
+ if(view==='training'){
+  // Resolve the piece's center at release, even if its preview missed the final movement event.
+  const x=event.clientX+d.centerX-d.x;
+  const y=event.clientY+d.centerY-d.y;
+  const square=squareAt(x,y);
+  if(square)return square;
+ }
+ return squareAt(event.clientX,event.clientY);
+}
 document.addEventListener('pointerup',e=>{
  if(!dragGesture||dragGesture.pointer!==e.pointerId)return;
  const d=clearDrag();
- const destination=document.elementFromPoint(e.clientX,e.clientY)?.closest('.square[data-square]');
+ const destination=dragDestination(d,e);
  // A fast release can reach another square before any pointermove is delivered.
  const moved=Math.hypot(e.clientX-d.x,e.clientY-d.y)>6;
  if(!moved&&(!destination||destination===d.square))return;
  suppressBoardClick=true;
  setTimeout(()=>suppressBoardClick=false,0);
- if(!destination||destination.closest('.board')!==d.board||destination.dataset.square===d.from)return;
+ if(!destination||destination.dataset.square===d.from)return;
  dragDropInProgress=true;
  try{
   if(view==='game'){
@@ -438,7 +452,8 @@ document.addEventListener('pointerup',e=>{
    handleGameSquare(destination.dataset.square);
   }else{
    selectedSquare=d.from;
-   destination.onclick?.();
+   if(view==='training')trySquare(destination.dataset.square);
+   else destination.onclick?.();
   }
  }finally{dragDropInProgress=false}
 });

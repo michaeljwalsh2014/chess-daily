@@ -35,7 +35,7 @@ test('queued destinations are highlighted while the knight stays on its current 
 
 test('a quick drop uses the release square even without a pointermove',()=>{
   const source=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
-  const start=source.indexOf("document.addEventListener('pointerup',e=>{");
+  const start=source.indexOf("function dragDestination(");
   const end=source.indexOf("document.addEventListener('pointercancel'",start);
   const board={},origin={dataset:{square:'g1'}},drop={dataset:{square:'f3'},closest:()=>board};
   const dragGesture={pointer:1,board,square:origin,from:'g1',x:0,y:0};
@@ -59,4 +59,27 @@ test('the held piece follows its played premove while capture stays on the origi
   vm.runInContext("followPlayedPremove({from:'g1',to:'f3'},'Nf3')",ctx);
   assert.equal(dragGesture.from,'f3');
   assert.equal(dragGesture.square,originalSquare);
+});
+
+
+test('a fast puzzle drop uses the visible piece center when the grab point is on another square',()=>{
+  const source=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+  const start=source.indexOf('function dragDestination(');
+  const end=source.indexOf("document.addEventListener('pointercancel'",start);
+  const board={};
+  const square=name=>({dataset:{square:name},closest:()=>board});
+  const origin=square('g1'),intended=square('f3'),neighbor=square('g3');
+  const dragGesture={pointer:1,board,square:origin,from:'g1',x:68,y:160,centerX:52,centerY:160};
+  let onRelease,move;
+  const ctx=vm.createContext({
+    document:{
+      addEventListener(_,handler){onRelease=handler},
+      elementFromPoint(x){return {closest:()=>x<40?intended:neighbor}},
+    },
+    dragGesture,clearDrag:()=>dragGesture,view:'training',suppressBoardClick:false,dragDropInProgress:false,
+    selectedSquare:null,setTimeout(){},trySquare(to){move={from:ctx.selectedSquare,to}},
+  });
+  vm.runInContext(source.slice(start,end),ctx);
+  onRelease({pointerId:1,clientX:48,clientY:80});
+  assert.deepEqual(move,{from:'g1',to:'f3'});
 });
