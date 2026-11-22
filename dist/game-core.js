@@ -48,7 +48,7 @@ export const ENDGAMES=[
     "id": "finish-outside-passer",
     "name": "Queen and king teamwork",
     "fen": "8/8/6Q1/8/7k/4K3/8/8 w - - 9 8",
-    "tip": "Use the king and your remaining pieces to finish this position. Use your king to keep the opposing king away, then advance the outside pawn. Promote safely before going for checkmate.",
+    "tip": "Use your queen to keep the opposing king on the edge. Bring your king close enough to cover the escape squares.",
     "difficulty": "Easy"
   },
   {
