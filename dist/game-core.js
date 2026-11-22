@@ -169,8 +169,62 @@ export const ENDGAMES=[
     "fen": "8/2b2pkp/1p4p1/p7/P2NP3/1P3KP1/5P1P/8 w - - 0 1",
     "tip": "Centralize your king and knight before opening the position. Watch Black\u2019s kingside pawn breaks and look for a way to create a passed pawn.",
     "difficulty": "Expert"
+  },
+  {
+    "id": "promotion-race",
+    "name": "Count the pawn race",
+    "fen": "8/5pp1/4k2p/P7/1P1K1PP1/7P/8/8 w - - 0 1",
+    "tip": "Count both sides\u2019 moves to promotion. Then check what your new queen can do about Black\u2019s passers.",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "king-entry",
+    "name": "Find a king entry square",
+    "fen": "8/8/4k3/p6p/P6P/4K3/4P3/8 w - - 0 1",
+    "tip": "Use the e-pawn to distract the king. Look for a way into the kingside to free the h-pawn.",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": "active-king",
+    "name": "Win pawns with an active king",
+    "fen": "8/1p3pk1/6pp/p7/P2KP3/1P3PP1/7P/8 w - - 0 1",
+    "tip": "Compare the kings’ routes to the queenside. Watch for Black’s kingside pawn breaks while you pick up the queenside pawns.",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "bishop-pawn-break",
+    "name": "Play a pawn break with bishops",
+    "fen": "8/5p1k/1p4p1/p1bP4/P3P3/1P1B1KP1/5P1P/8 w - - 0 1",
+    "tip": "Calculate the central pawn break, then use your king and bishop to support the d-pawn.",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "rook-trade-calculation",
+    "name": "Calculate the rook trade",
+    "fen": "8/5pk1/p3r1pp/1p6/1P1P4/P3RKP1/5P1P/8 w - - 0 1",
+    "tip": "Before trading rooks, work out whose king gets to the queenside and how fast Black can push on the other wing.",
+    "difficulty": "Intermediate"
+  },
+  {
+    "id": "knight-defense",
+    "name": "Hold a balanced knight ending",
+    "fen": "8/1p3pkp/p1np2p1/4p3/4P3/1PNP1KP1/P4P1P/8 w - - 0 1",
+    "tip": "Keep your knight active and look for checks. Secure a draw if neither side can safely make progress.",
+    "difficulty": "Expert"
   }
 ];
+export const PRACTICAL_ENDGAMES = [
+  'promotion-race',
+  'king-entry',
+  'active-king',
+  'rook-trade-calculation',
+  'queenside-majority',
+  'rook-active-passer',
+  'bishop-pawn-break',
+  'rook-bishop-passer',
+  'knight-versus-bishop',
+  'knight-defense',
+].map(id=>ENDGAMES.find(exercise=>exercise.id===id));
 export function gameFrom(record,limit=record.moves.length){const c=record.fen?new Chess(record.fen):new Chess();for(const m of record.moves.slice(0,limit))c.move(m);return c}
 export function settleClock(m,now=Date.now()){if(!m||!m.clock||m.paused||m.result||!m.runningSince)return false;const side=m.turn||'w';m.clock[side]=Math.max(0,m.clock[side]-(now-m.runningSince)/1000);m.runningSince=now;if(m.clock[side]===0){const c=gameFrom(m);const winner=side==='w'?'b':'w';const bareKing=c.board().flat().filter(Boolean).filter(p=>p.color===winner).every(p=>p.type==='k');m.result=bareKing?'draw':side==='w'?'loss':'win';m.reason=bareKing?'Time expired; opponent has only a king':'Time expired';return true}return false}
 export function commitMove(m,move,now=Date.now()){if(settleClock(m,now)||m.result||m.paused)return null;const c=gameFrom(m),side=c.turn(),played=c.move(move);m.moves=c.history();if(m.clock)m.clock[side]+=m.increment||0;m.turn=c.turn();m.runningSince=now;if(c.isGameOver()){m.result=c.isCheckmate()?(c.turn()==='b'?'win':'loss'):'draw';m.reason=c.isCheckmate()?'Checkmate':c.isStalemate()?'Stalemate':c.isThreefoldRepetition()?'Threefold repetition':c.isInsufficientMaterial()?'Insufficient material':'Draw'}return played}
