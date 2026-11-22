@@ -141,6 +141,34 @@ export const ENDGAMES=[
     "fen": "7k/8/5K2/8/4B3/8/8/2B5 w - - 0 1",
     "tip": "Use the bishops together to push the king toward a corner. Bring your king close to take away escape squares, then deliver mate.",
     "difficulty": "Expert"
+  },
+  {
+    "id": "queenside-majority",
+    "name": "Create a queenside passer",
+    "fen": "8/1p3pk1/p3p1pp/P3P3/1P1K1P2/6P1/7P/8 w - - 0 1",
+    "tip": "Bring your king toward your queenside majority. Calculate Black\u2019s kingside pawn breaks before committing to a pawn race.",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "rook-active-passer",
+    "name": "Rook and a distant passed pawn",
+    "fen": "4r1k1/5pp1/7p/P7/4P3/5KP1/5P1P/R7 w - - 0 1",
+    "tip": "Use the a-pawn to tie down Black\u2019s rook. Calculate when to push it and when to bring your king and other pawns forward.",
+    "difficulty": "Advanced"
+  },
+  {
+    "id": "rook-bishop-passer",
+    "name": "Rook and bishop with a pawn majority",
+    "fen": "4r1k1/5pp1/2b4p/P7/2B1P3/5KP1/5P1P/R7 w - - 0 1",
+    "tip": "Look for a favorable bishop exchange. Calculate how a second passed pawn can overload Black\u2019s rook.",
+    "difficulty": "Expert"
+  },
+  {
+    "id": "knight-versus-bishop",
+    "name": "Knight versus bishop and pawns",
+    "fen": "8/2b2pkp/1p4p1/p7/P2NP3/1P3KP1/5P1P/8 w - - 0 1",
+    "tip": "Centralize your king and knight before opening the position. Watch Black\u2019s kingside pawn breaks and look for a way to create a passed pawn.",
+    "difficulty": "Expert"
   }
 ];
 export function gameFrom(record,limit=record.moves.length){const c=record.fen?new Chess(record.fen):new Chess();for(const m of record.moves.slice(0,limit))c.move(m);return c}
