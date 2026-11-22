@@ -10,7 +10,7 @@ let dragGesture=null,suppressBoardClick=false,dragDropInProgress=false;
 import {autoStartingState} from './auto-profile.js?v=20261114-1';
 let lessonStartMode='watch';try{lessonStartMode=localStorage.getItem('chess-lesson-start')==='practice'?'practice':'watch'}catch{}
 let demonstrationSpeed=1;try{const speed=Number(localStorage.getItem('chess-demonstration-speed'));if([.5,1,1.5,2].includes(speed))demonstrationSpeed=speed}catch{}
-import {ENDGAME_DEMOS} from './endgame-demos.js?v=20261114-endgame-ladder';
+import {ENDGAME_DEMOS} from './endgame-demos.js?v=20261122-free-endgames';
 import {moveGrade,evaluation,whiteScore,moveInsight} from './review-core.js?v=20261114-26';
 import {Chess,DEFAULT_POSITION} from './vendor/chess.js';
 import {LEVELS,CONTROLS,ENDGAMES,botTiming,resultMessage,executePremove,pendingPremoves,clearPremoves,queuePremove,premoveBoard,gameFrom,settleClock,commitMove,gameSummary,moveNotes} from './game-core.js?v=20261122-puzzle-alternates';
@@ -35,7 +35,7 @@ let boardTheme='green';try{const saved=localStorage.getItem('chess-board-theme')
 let lessonState=null,lessonTimer=null;
 const GUIDED_LESSONS=[{id:'rook-box',title:'Checkmate with a rook',intro:'Use your rook and king together to trap the king at the edge.'},{id:'queen-box',title:'Checkmate with a queen',intro:'Use the queen to limit escape squares, with help from your king.'},{id:'two-bishops',title:'Checkmate with two bishops',intro:'Coordinate both bishops with your king to cover the escape squares.'},{id:'pawn-race',title:'Promote a pawn',intro:'Guide a pawn to the last rank and turn it into a queen.'},{"id": "two-rooks", "title": "Checkmate with two rooks", "intro": "Use your rooks like a ladder: cut off escape squares and finish along the edge."},{"id": "connected-pawns", "title": "Advance connected passed pawns", "intro": "Support two neighboring pawns with your king and help them promote together."},{"id": "queen-vs-pawn", "title": "Stop a pawn with your queen", "intro": "Use checks and your king to stop a dangerous pawn, then finish with checkmate."},{"id": "rook-and-pawn", "title": "Support a passed pawn with a rook", "intro": "Cut off the enemy king with your rook while your pawn advances safely."},{"id": "outside-passer", "title": "Win with an outside passed pawn", "intro": "Use a pawn far from the enemy king to win the promotion race."},{"id": "back-rank-mate", "title": "Spot a back-rank checkmate", "intro": "Look for a king trapped behind its own pawns, then bring your rook to the back rank."}];
 GUIDED_LESSONS.push(...EXTRA_SKILLS.sort((a,b)=>a.rating-b.rating));
-let endgameDemo=null,endgameDemoTimer=null;
+let endgameDemo=null,endgameDemoTimer=null,endgameWorker=null;
 let arenaMatch=null,arenaWorker=null,arenaTimer=null,arenaToken=0,state,bank=[],legacy=[],puzzleMap=new Map(),view='dashboard',layoutMode='auto',selectedSkill=null,selectedSquare=null,flipped=false,paused=false,feedback=null,replayStep=null,review=null,journalFilter='all',pendingPromotion=null,lastTick=Date.now(),toastTimeout;
 try{state=normalize(JSON.parse(localStorage.getItem('chess-daily')))}catch{state=normalize(null)}
 initializeAutoRating();
@@ -59,7 +59,7 @@ function skillCoach(skill){state.coach||=newCoach(currentRating());return state.
 function progressPercent(){let r=currentRating(),start=ratingStartingPoint(),goal=state.profile?.goal||1500;return r==null||start==null||goal<=start?0:clamp((r-start)/(goal-start)*100,0,100)}
 function relativeTime(seconds){return seconds<60?Math.round(seconds)+' sec':(seconds/60).toFixed(1)+' min'}
 function navigation(){const labels={dashboard:'YOUR DAILY WORKSPACE',checklist:'YOUR DAILY WORKSPACE',training:'TEN MINUTES, ONE SKILL',journal:'YOUR LEARNING JOURNAL',progress:'THE LONG GAME',settings:'A PLAN THAT FITS YOU',review:'LOOK BACK. LEARN SOMETHING.',game:'PLAY AT YOUR PACE',games:'YOUR GAME REVIEW',endgames:'ENDGAME PRACTICE',learn:'LEARN A SKILL','endgame-demo':'ENDGAME DEMONSTRATION',arena:'BOT ARENA', 'arena-live':'BOT ARENA','home-style':'CHOOSE YOUR HOME'};$('#page-label').textContent=labels[view];$('#today').textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});$$('nav button').forEach(b=>{const active=b.dataset.view===view||view==='checklist'&&b.dataset.view==='dashboard'||view==='review'&&b.dataset.view==='journal'||view==='arena-live'&&b.dataset.view==='arena';b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});const goal=state.profile?.goal||1500;$('#side-goal').innerHTML=`<div class="eyebrow">YOUR LONG-TERM GOAL</div><strong>${fmt(goal)} <small>rating</small></strong><div class="progress-track"><span style="width:${progressPercent()}%"></span></div><small>${currentRating()==null?'Let’s find your starting point.':fmt(currentRating())+' now · one move at a time'}</small>`}
-function go(v){if(['game','learn','training','games','arena','arena-live','endgame-demo'].includes(v))pauseRatingAnalysis();if(v==='settings'&&state.profile){openGameSettings();return}if(view==='game'&&v!=='game')liveHistoryStep=null;if(view==='learn'&&v!=='learn'){lessonWorker?.terminate();lessonWorker=null;clearTimeout(lessonTimer);lessonTimer=null;lessonState=null}if(view==='endgame-demo'&&v!=='endgame-demo'){clearTimeout(endgameDemoTimer);endgameDemoTimer=null}if(view==='arena-live'&&v!=='arena-live')stopArena();if(view==='games'&&v!=='games')cancelReviewAnalysis();flushTime();const enteringLesson=v==='learn'&&view!=='learn';view=v;selectedSquare=null;feedback=null;if(v==='training')paused=false;lastTick=Date.now();if(enteringLesson)lessonStart();else render();window.scrollTo({top:0,behavior:'instant'})}
+function go(v){if(['game','learn','training','games','arena','arena-live','endgame-demo'].includes(v))pauseRatingAnalysis();if(v==='settings'&&state.profile){openGameSettings();return}if(view==='game'&&v!=='game')liveHistoryStep=null;if(view==='learn'&&v!=='learn'){lessonWorker?.terminate();lessonWorker=null;clearTimeout(lessonTimer);lessonTimer=null;lessonState=null}if(view==='endgame-demo'&&v!=='endgame-demo'){clearTimeout(endgameDemoTimer);endgameDemoTimer=null;stopEndgameSearch()}if(view==='arena-live'&&v!=='arena-live')stopArena();if(view==='games'&&v!=='games')cancelReviewAnalysis();flushTime();const enteringLesson=v==='learn'&&view!=='learn';view=v;selectedSquare=null;feedback=null;if(v==='training')paused=false;lastTick=Date.now();if(enteringLesson)lessonStart();else render();window.scrollTo({top:0,behavior:'instant'})}
 function render(){document.body.classList.toggle('checklist-home-active',view==='checklist'||(view==='dashboard'&&!!state.profile&&state.homeStyle!=='board'));document.body.classList.toggle('board-home-active',view==='dashboard'&&!!state.profile&&state.homeStyle==='board');const retainedEval=$('.eval-white');const retainedBoard=$('.board');document.body.classList.toggle("reviewing-game",view==='games'&&reviewGameIndex!=null);document.body.classList.toggle("focus-training",view==='training'&&!!state.active&&state.active.stage==='puzzles');applyLayoutMode();navigation();let html;if(!state.profile&&(view==='dashboard'||view==='training'||view==='settings'))html=setupPage(true);else if(view==='dashboard')html=dashboardPage();else if(view==='checklist')html=dashboardPage(true);else if(view==='home-style')html=homeStylePage();else if(view==='training')html=trainingPage();else if(view==='journal')html=journalPage();else if(view==='progress')html=progressPage();else if(view==='settings')html=setupPage(false);else if(view==='review')html=reviewPage();else if(view==='game')html=gamePage();else if(view==='games')html=gamesPage();else if(view==='learn')html=lessonPage();else if(view==='endgames')html=endgamesPage();else if(view==='endgame-demo')html=endgameDemoPage();else if(view==='arena')html=arenaPage();else if(view==='arena-live')html=arenaLivePage();const roomSelector=view==='game'&&state.match?'.game-room':view==='endgame-demo'?'.endgame-demo-room':view==='training'&&state.active?.stage==='puzzles'?'.focus-room':view==='learn'&&lessonState?.phase!=='rest'?'.lesson-room':null;const currentRoom=roomSelector?$(roomSelector):null;let patchedGame=false;if(currentRoom){const template=document.createElement('template');template.innerHTML=html;const freshRoom=template.content.querySelector(roomSelector);if(freshRoom){const nextBoard=freshRoom.querySelector('.board'),slide=retainedBoard&&nextBoard?boardSlide(retainedBoard,nextBoard):null;patchGameView(currentRoom,freshRoom,syncBoard);if(dragGesture)hideDragSource(dragGesture);if(slide)animateBoardSlide(retainedBoard,slide);patchedGame=true}}if(!patchedGame)$('#content').innerHTML=html;const freshEval=$('.eval-white');if(retainedEval&&freshEval){const target=freshEval.style.height;freshEval.replaceWith(retainedEval);requestAnimationFrame(()=>{if(retainedEval.isConnected)retainedEval.style.height=target})}const freshBoard=$('.board');if(!patchedGame&&retainedBoard&&freshBoard&&retainedBoard.children.length===64){const slide=boardSlide(retainedBoard,freshBoard);syncBoard(retainedBoard,freshBoard);freshBoard.replaceWith(retainedBoard);if(slide)animateBoardSlide(retainedBoard,slide)}bind();ensurePuzzleAdvance();gameSounds(state.match);gameSounds(arenaMatch,true);updateLowTimeWarning();queueRatingAnalysis();if(view==='progress')updateRatingAnalysisStatus();}
 function setupPage(first){const p=state.profile||{},known=p.currentRating!=null||currentRating()!=null;return `<div class="setup"><div class="intro"><div class="eyebrow">${first?'A BETTER WAY TO PRACTICE':'YOUR TRAINING PLAN'}</div><h1 style="margin-top:13px">${first?'Start where you are.':'Make this your training room.'}</h1><p>${first?'Tell us a little about your chess. We’ll find the right challenge together.':'Your game rating and puzzle difficulty are separate. Your solves guide the training.'}</p></div><form id="profile-form" class="panel"><h2>${first?'First, your starting point':'Your rating & goal'}</h2><p class="fine">An Elo is a chess rating. It’s completely fine if you don’t have one yet.</p><div class="setup-choices"><label class="choice"><input type="radio" name="known" value="yes" ${known?'checked':''}>I know my rating</label><label class="choice"><input type="radio" name="known" value="no" ${known?'':'checked'}>I don’t know my rating</label></div><div class="form-grid"><label class="form-field">Current game rating<input id="current-rating" name="current" type="number" min="100" max="3500" step="1" value="${known?currentRating():''}" placeholder="For example, 950" ${known?'required':'disabled'}><small>Use a rapid rating from the platform you play on.</small></label><label class="form-field">The rating I’m working toward<input name="goal" type="number" min="100" max="3500" step="1" value="${p.goal||1500}" required><small>A direction to work toward, without a deadline.</small></label><label class="form-field full">Chess platform / time control<input name="platform" value="${esc(p.platform||'')}" placeholder="For example, Chess.com rapid"><small>Optional. Keep rating updates comparable.</small></label></div>${!first?'<label class="inline-check section-space"><input type="checkbox" name="recalibrate">Start a fresh difficulty calibration from this rating</label><p class="fine muted">Your journal and used positions will be kept.</p>':''}<button class="button primary">${first?'Create my training plan':'Save training plan'}</button><p class="fine muted" style="margin:14px 0 0;text-align:center">${known?'We’ll start near your level and adjust with each puzzle.':'No rating? We start easy. Fast, accurate solves bring harder puzzles.'}</p></form>${first?'<div class="setup-benefits"><div><b>Real positions</b>Rated puzzles from real games.</div><div><b>Your pace</b>Difficulty follows your answers.</div><div><b>Fresh practice</b>No automatic position repeats.</div></div>':`<details class="panel section-space"><summary>Backups & help</summary><div hidden><h2>How your coach adjusts</h2><p class="fine">A clean solve means no incorrect moves, hints, or solution reveals. Two or more quick, clean solves raise difficulty more quickly. A thoughtful solve keeps the challenge manageable. Mistakes hold the level steady; repeated struggles bring a small step down.</p><p class="fine">Time is measured while the training room is visible and unpaused. Longer lines get more thinking time. Puzzle ratings are training difficulty, not an estimate of your game rating.</p><p class="fine">There are ${fmt(bank.length)} real positions. New sessions avoid both used IDs and used board positions. If a skill runs out, the app asks you to choose another skill.</p></div><div class="row wrap"><button class="button secondary" type="button" data-export>Export my backup</button><label class="button secondary" style="cursor:pointer">Restore a backup<input type="file" class="restore-file" accept="application/json" hidden></label></div><p class="fine muted" style="margin:15px 0 0">Your records live in this browser. Export a backup to move them to another device.</p></details>`}</div>`}
 function homeStylePage(){return `<div class="simple-home home-style-choice"><div class="eyebrow">ONE LAST CHOICE</div><h1>Choose your home page.</h1><p>Pick the view you want to see when you open Chess, daily. You can change it any time in Settings.</p><div class="home-style-options"><button class="panel home-style-option" data-home-style="checklist"><div class="eyebrow">CHECKLIST</div><h2>Your daily practice</h2><p>See your daily goals and pick what to work on next.</p><span class="button primary">Use checklist</span></button><button class="panel home-style-option" data-home-style="board"><div class="eyebrow">BOARD</div><h2>Start with a game</h2><p>Open to a chessboard with a quick way to start playing.</p><div class="style-board-preview">${boardHTML(new Chess(),{staticBoard:true})}</div><span class="button primary">Use board</span></button></div></div>`}
@@ -283,55 +283,121 @@ function demonstrationSpeedHTML(id='demonstration-speed'){return settingsPicker(
 function setDemonstrationSpeed(value){const speed=Number(value);if(![.5,1,1.5,2].includes(speed))return;demonstrationSpeed=speed;try{localStorage.setItem('chess-demonstration-speed',String(speed))}catch{}if(view==='learn'){render();lessonSchedule()}else if(view==='endgame-demo')scheduleEndgameDemo()}
 
 function bindLesson(){if($('#demonstration-speed'))$('#demonstration-speed').onchange=e=>{setDemonstrationSpeed(e.target.value)};if($('#lesson-restart'))$('#lesson-restart').onclick=()=>{lessonWorker?.terminate();lessonWorker=null;lessonState.attempt=[];lessonState.premove=null;lessonState.waiting=false;lessonState.message='';selectedSquare=null;render()};if($('#lesson-easier'))$('#lesson-easier').onclick=()=>lessonStart(lessonState.index-1);if($('#lesson-harder'))$('#lesson-harder').onclick=()=>lessonStart(lessonState.index+1);if($('#lesson-skip'))$('#lesson-skip').onclick=()=>{recordLessonReview(lessonCurrent().lesson.id,false);lessonStart()};if($('#lesson-next'))$('#lesson-next').onclick=()=>lessonStart();if($('#lesson-rewatch'))$('#lesson-rewatch').onclick=()=>lessonStart(lessonState.index,true);$$('[data-review-lesson]').forEach(button=>button.onclick=()=>lessonStart(Number(button.dataset.reviewLesson)));if($('#lesson-cancel-premove'))$('#lesson-cancel-premove').onclick=()=>{lessonState.premove=null;selectedSquare=null;lessonState.message='Premove canceled.';render()};if($('#lesson-play'))$('#lesson-play').onclick=()=>{const d=lessonState;if(d.step>=lessonCurrent().moves.length)d.step=0;d.playing=!d.playing;render();lessonSchedule()};if($('#lesson-try'))$('#lesson-try').onclick=()=>{clearTimeout(lessonTimer);lessonState.attempt=[];lessonState.premove=null;lessonState.phase='try';lessonState.step=0;lessonState.playing=false;lessonState.message='';selectedSquare=null;render()};if($('#lesson-hint'))$('#lesson-hint').onclick=()=>{const {lesson,exercise,moves}=lessonCurrent();lessonState.message=lesson.moves?'Try '+moves[lessonState.attempt?.length||0]?.slice(0,2)+' → '+moves[lessonState.attempt?.length||0]?.slice(2,4)+'. '+exercise.tip:exercise.tip;render()}}
-function startEndgameDemo(exercise){if(!exercise)return;endgameDemo={id:exercise.id,step:0,playing:false,started:false,phase:'watch',attempt:[],hint:false,message:''};go('endgame-demo');scheduleEndgameDemo()}
+function startEndgameDemo(exercise){if(!exercise)return;stopEndgameSearch();endgameDemo={id:exercise.id,step:0,playing:false,started:false,phase:'watch',attempt:[],hint:false,message:''};go('endgame-demo');scheduleEndgameDemo()}
 function nextEndgameDemo(){const index=ENDGAMES.findIndex(e=>e.id===endgameDemo?.id),next=ENDGAMES[index+1];if(index>=0&&next)startEndgameDemo(next);else go('endgames')}
 function scheduleEndgameDemo(){clearTimeout(endgameDemoTimer);const d=endgameDemo,line=d&&ENDGAME_DEMOS[d.id];if(view!=='endgame-demo'||d?.phase!=='watch'||!d?.playing||!line||d.step>=line.moves.length)return;endgameDemoTimer=setTimeout(()=>{if(view!=='endgame-demo'||endgameDemo!==d||!d.playing)return;d.step++;if(d.step>=line.moves.length)d.playing=false;render();scheduleEndgameDemo()},700/demonstrationSpeed)}
 function endgamePracticeBoard(){const d=endgameDemo,e=ENDGAMES.find(item=>item.id===d?.id),c=new Chess(e.fen);for(const code of d?.attempt||[])c.move({from:code.slice(0,2),to:code.slice(2,4),promotion:code[4]||'q'});return c}
-function endgameDemoPage(){const d=endgameDemo,e=d&&ENDGAMES.find(e=>e.id===d.id),line=e&&ENDGAME_DEMOS[e.id];if(!line)return '<button class="button secondary" data-goto="endgames">Back to endgames</button>';const trying=d.phase==='try'||d.phase==='complete',c=trying?endgamePracticeBoard():new Chess(e.fen);if(!trying)for(const code of line.moves.slice(0,d.step))c.move({from:code.slice(0,2),to:code.slice(2,4),promotion:code[4]||'q'});const history=c.history({verbose:true}),last=history.at(-1),finished=d.phase==='complete'||(!trying&&d.step===line.moves.length),practiceMoves=d.practiceLine||line.moves,next=practiceMoves[d.attempt.length],hint=trying&&d.hint&&next?next:null;return `<div class="endgame-demo-room"><div class="intro row"><div><div class="eyebrow">WATCH, THEN TRY</div><h1>${esc(e.name)}</h1><p>${esc(e.tip)}</p></div><button class="button secondary" data-goto="endgames">Back to endgames</button></div><div class="training-layout"><div class="board-panel">${boardHTML(c,{interactive:d.phase==='try',last,hint})}<p class="fine muted section-space">${trying?'Drag a piece or select it and a highlighted square.':'Watch how the pieces work together.'}</p></div><div class="panel"><h2>${d.phase==='complete'?'Nice work!':d.phase==='try'?'Your turn':finished?'Now you try!':!d.started?'Ready to practice?':'Watch the endgame'}</h2><p role="status">${esc(d.message||(d.phase==='complete'?'You completed the endgame!':d.phase==='try'?'Find the next move. You can ask for a hint or restart anytime.':finished?(line.result==='checkmate'?'The demonstration ended in checkmate.':'With accurate play, this position ends in a draw.'):(last?`${last.color==='w'?'White':'Black'} played ${last.san}.`:!d.started?'Watch the demonstration or skip straight to practice.':'Starting position.')))}</p><p class="fine">${trying?`Your moves: ${Math.ceil(d.attempt.length/2)} of ${Math.ceil(practiceMoves.length/2)}`:`Move ${d.step} of ${line.moves.length}`}</p><div class="row wrap">${trying?`${d.phase==='complete'?`<button class="button primary" id="demo-next">${ENDGAMES.at(-1).id===d.id?'Back to endgames':'Next endgame'}</button>`:''}${d.phase==='try'?'<button class="button secondary" id="demo-hint">Hint</button><button class="button secondary" id="demo-restart">Restart</button>':''}<button class="button secondary" id="demo-play">Watch again</button>`:`<button class="button secondary" id="demo-play">${finished?'Watch again':d.playing?'Pause':d.started?'Resume':'Watch video'}</button><button class="button primary" id="demo-try">${finished?'Now you try':'Skip to practice'}</button>`}</div></div></div></div>`}
-function bindEndgameDemo(){if(view!=='endgame-demo')return;if($('#demo-next'))$('#demo-next').onclick=nextEndgameDemo;if($('#demo-play'))$('#demo-play').onclick=()=>{const d=endgameDemo,line=ENDGAME_DEMOS[d.id];if(d.phase==='try'||d.phase==='complete'){d.phase='watch';d.attempt=[];d.practiceLine=null;d.message='';d.hint=false;d.step=0;d.playing=true}else if(d.step>=line.moves.length){d.step=0;d.playing=true}else d.playing=!d.playing;d.started=true;selectedSquare=null;render();scheduleEndgameDemo()};if($('#demo-try'))$('#demo-try').onclick=()=>{clearTimeout(endgameDemoTimer);const d=endgameDemo;d.playing=false;d.phase='try';d.attempt=[];d.practiceLine=null;d.message='Find your first move. Ask for a hint if you get stuck.';d.hint=false;selectedSquare=null;render()};if($('#demo-hint'))$('#demo-hint').onclick=()=>{const d=endgameDemo,line=d.practiceLine||ENDGAME_DEMOS[d.id].moves,code=line[d.attempt.length];d.hint=true;d.message=code?`Hint: move from ${code.slice(0,2)} to ${code.slice(2,4)}.`:'You found the line!';render()};if($('#demo-restart'))$('#demo-restart').onclick=()=>{endgameDemo.attempt=[];endgameDemo.practiceLine=null;endgameDemo.hint=false;endgameDemo.message='Try the position again. Use Hint whenever you need it.';selectedSquare=null;render()}}
-function endgameTrySquare(sq){
+function endgameDemoPage(){const d=endgameDemo,e=d&&ENDGAMES.find(e=>e.id===d.id),line=e&&ENDGAME_DEMOS[e.id];if(!line)return '<button class="button secondary" data-goto="endgames">Back to endgames</button>';const trying=d.phase==='try'||d.phase==='complete',c=trying?endgamePracticeBoard():new Chess(e.fen);if(!trying)for(const code of line.moves.slice(0,d.step))c.move({from:code.slice(0,2),to:code.slice(2,4),promotion:code[4]||'q'});const history=c.history({verbose:true}),last=history.at(-1),finished=d.phase==='complete'||(!trying&&d.step===line.moves.length),hint=trying?d.hint:null;return `<div class="endgame-demo-room"><div class="intro row"><div><div class="eyebrow">WATCH, THEN TRY</div><h1>${esc(e.name)}</h1><p>${esc(e.tip)}</p></div><button class="button secondary" data-goto="endgames">Back to endgames</button></div><div class="training-layout"><div class="board-panel">${boardHTML(c,{interactive:d.phase==='try'&&c.turn()==='w',last,hint})}<p class="fine muted section-space">${trying?'Drag a piece or select it and a highlighted square.':'Watch how the pieces work together.'}</p></div><div class="panel"><h2>${d.phase==='complete'?(d.success?'Nice work!':'Practice finished'):d.phase==='try'?(c.turn()==='w'?'Your turn':'Computer’s turn'):finished?'Now you try!':!d.started?'Ready to practice?':'Watch the endgame'}</h2><p role="status">${esc(d.message||(d.phase==='complete'?'You completed the endgame!':d.phase==='try'?(line.result==='draw'?'Play for a draw or better against the computer.':'Play for checkmate against the computer.'):finished?(line.result==='checkmate'?'The demonstration ended in checkmate.':'With accurate play, this position ends in a draw.'):(last?`${last.color==='w'?'White':'Black'} played ${last.san}.`:!d.started?'Watch the demonstration or skip straight to practice.':'Starting position.')))}</p><p class="fine">${trying?`Your moves: ${Math.ceil(d.attempt.length/2)}`:`Move ${d.step} of ${line.moves.length}`}</p><div class="row wrap">${trying?`${d.phase==='complete'&&d.success?`<button class="button primary" id="demo-next">${ENDGAMES.at(-1).id===d.id?'Back to endgames':'Next endgame'}</button>`:''}${d.phase==='try'&&c.turn()==='w'?'<button class="button secondary" id="demo-hint">Hint</button>':d.phase==='try'&&!endgameWorker?'<button class="button secondary" id="demo-retry">Retry computer</button>':''}<button class="button secondary" id="demo-restart">Restart</button><button class="button secondary" id="demo-play">Watch again</button>`:`<button class="button secondary" id="demo-play">${finished?'Watch again':d.playing?'Pause':d.started?'Resume':'Watch video'}</button><button class="button primary" id="demo-try">${finished?'Now you try':'Skip to practice'}</button>`}</div></div></div></div>`}
+function stopEndgameSearch(){
+ endgameWorker?.terminate();
+ endgameWorker=null;
+}
+function resetEndgamePractice(){
+ stopEndgameSearch();
  const d=endgameDemo;
- if(!d||d.phase!=='try')return;
- const c=endgamePracticeBoard(),piece=c.get(sq);
- if(piece?.color==='w'){
-  selectedSquare=selectedSquare===sq?null:sq;
-  d.message='';render();return;
- }
- if(!selectedSquare)return;
- const from=selectedSquare;
+ Object.assign(d,{phase:'try',attempt:[],message:'',hint:null,playing:false,success:false});
+ clearTimeout(endgameDemoTimer);
  selectedSquare=null;
- const demo=ENDGAME_DEMOS[d.id];
- let line=d.practiceLine||demo.moves;
- const expected=line[d.attempt.length];
- const candidates=c.moves({square:from,verbose:true}).filter(move=>move.to===sq);
- const codeOf=move=>move.from+move.to+(move.promotion||'');
- const legal=candidates.find(move=>codeOf(move)===expected)||candidates[0];
- if(!legal){d.message='That move is not legal. Choose a highlighted square.';render();return}
- const code=codeOf(legal);
- c.move(legal);
- d.hint=false;
- if(code!==expected){
-  const remaining=Math.min(6,Math.max(4,line.length-d.attempt.length-1));
-  const continuation=demo.result==='checkmate'?forcedMateLine(c,'w',remaining):null;
-  if(!continuation){
-   d.message=c.isStalemate()?'That move gives stalemate. Try another move.':'Try another move or ask for a hint.';
-   render();return;
-  }
-  line=d.practiceLine=[...d.attempt,code,...continuation];
- }
- d.attempt.push(code);
- const reply=line[d.attempt.length];
- if(reply)d.attempt.push(reply);
- if(d.attempt.length>=line.length){
-  d.phase='complete';
-  d.message='You completed the endgame!';
+ render();
+}
+function bindEndgameDemo(){
+ if(view!=='endgame-demo')return;
+ if($('#demo-next'))$('#demo-next').onclick=nextEndgameDemo;
+ if($('#demo-play'))$('#demo-play').onclick=()=>{
+  const d=endgameDemo,line=ENDGAME_DEMOS[d.id];
+  stopEndgameSearch();
+  if(d.phase!=='watch'||d.step>=line.moves.length){
+   Object.assign(d,{phase:'watch',step:0,attempt:[],message:'',hint:null,playing:true});
+  }else d.playing=!d.playing;
+  d.started=true;selectedSquare=null;render();scheduleEndgameDemo();
+ };
+ if($('#demo-try'))$('#demo-try').onclick=resetEndgamePractice;
+ if($('#demo-restart'))$('#demo-restart').onclick=resetEndgamePractice;
+ if($('#demo-retry'))$('#demo-retry').onclick=()=>requestEndgameMove(endgamePracticeBoard());
+ if($('#demo-hint'))$('#demo-hint').onclick=()=>requestEndgameMove(endgamePracticeBoard(),true);
+}
+function finishEndgamePractice(game){
+ if(!game.isGameOver())return false;
+ const d=endgameDemo,mated=game.isCheckmate(),whiteWon=mated&&game.turn()==='b';
+ d.phase='complete';
+ d.success=whiteWon||!mated&&ENDGAME_DEMOS[d.id].result==='draw';
+ d.message=whiteWon?'Checkmate! You won the endgame.':mated?'The computer won by checkmate.':game.isStalemate()?'The endgame ended in stalemate.':'The endgame ended in a draw.';
+ if(d.success){
   state.endgamesDone||=[];
   if(!state.endgamesDone.includes(d.id))state.endgamesDone.push(d.id);
   state.checks[dailyChecklistKey()]||={};
   state.checks[dailyChecklistKey()].endgame=true;
   save();
- }else d.message=code===expected?'Correct. Find the next move.':'That also forces mate. Find the next move.';
+ }
+ return true;
+}
+function endgameMoveCode(move){return move.from+move.to+(move.promotion||'')}
+function requestEndgameMove(game,hint=false){
+ if(endgameWorker)return;
+ const d=endgameDemo;
+ let worker;
+ try{worker=new Worker('opponent.js?v=20261116-megalodon-v3',{type:'module'})}catch{
+  d.message=hint?'Could not find a hint. Try Hint again.':'The computer could not reply. Try Retry computer.';
+  render();return;
+ }
+ endgameWorker=worker;
+ d.message=hint?'Looking for a hint…':'The computer is thinking…';
+ const failed=()=>{
+  if(endgameWorker!==worker)return;
+  stopEndgameSearch();
+  d.message=hint?'Could not find a hint. Try Hint again.':'The computer could not reply. Try Retry computer.';
+  render();
+ };
+ worker.onerror=failed;
+ worker.onmessage=({data})=>{
+  if(endgameWorker!==worker||endgameDemo!==d)return;
+  if(!data.move)return failed();
+  let move;
+  try{move=game.move(data.move)}catch{return failed()}
+  stopEndgameSearch();
+  const code=endgameMoveCode(move);
+  if(hint){
+   d.hint=code;
+   d.message='Try '+move.san+'.';
+  }else{
+   d.attempt.push(code);
+   d.message='';
+   finishEndgamePractice(game);
+  }
+  render();
+ };
+ worker.postMessage({id:1,fen:game.fen(),initialFen:ENDGAMES.find(e=>e.id===d.id).fen,history:game.history(),level:11,budget:400});
  render();
+}
+function playEndgamePracticeMove(game,move){
+ stopEndgameSearch();
+ const d=endgameDemo;
+ d.attempt.push(endgameMoveCode(game.move(move)));
+ d.hint=null;
+ selectedSquare=null;
+ if(finishEndgamePractice(game))render();
+ else requestEndgameMove(game);
+}
+function endgameTrySquare(sq){
+ const d=endgameDemo;
+ if(!d||d.phase!=='try')return;
+ const game=endgamePracticeBoard();
+ if(game.turn()!=='w')return;
+ if(game.get(sq)?.color==='w'){
+  selectedSquare=selectedSquare===sq?null:sq;
+  render();return;
+ }
+ if(!selectedSquare)return;
+ const moves=game.moves({square:selectedSquare,verbose:true}).filter(move=>move.to===sq);
+ if(!moves.length){d.message='That move is not legal. Choose a highlighted square.';render();return}
+ if(!moves[0].promotion){playEndgamePracticeMove(game,moves[0]);return}
+ const modal=$('#promotion');
+ $('#promotion .promotion-options').innerHTML=moves.map(move=>`<button data-endgame-promote="${move.promotion}" aria-label="Promote to ${names[move.promotion]}">${glyph[move.promotion]}</button>`).join('');
+ $$('[data-endgame-promote]').forEach(button=>button.onclick=()=>{
+  modal.close();
+  if(endgameDemo===d&&d.phase==='try')playEndgamePracticeMove(game,moves.find(move=>move.promotion===button.dataset.endgamePromote));
+ });
+ modal.showModal();
 }
 function endgamesPage(){const done=state.endgamesDone||[],practiced=new Set([...(state.endgamesPracticed||[]),...done,...(state.games||[]).filter(g=>g.kind==='endgame').map(g=>g.exercise)]);return `<div class="simple-home"><div class="eyebrow">SMALL BOARDS, BIG IMPROVEMENT</div><h1>Finish the game.</h1><p>20 challenges, from easiest to hardest. Watch the demonstration, then try it yourself. White moves first.</p>${state.match&&!state.match.result?'<div class="coach-note"><p>You have a game in progress.</p><button class="button primary" data-goto="game">Continue game</button></div>':''}${ENDGAMES.map((e,i)=>`<div class="panel section-space"><div class="row wrap"><h2>${i+1}. ${e.name}</h2><span class="badge">${e.difficulty}</span><span class="badge">${done.includes(e.id)?'Completed':practiced.has(e.id)?'Practiced':'Ready to practice'}</span></div><p>${e.tip}</p><button class="button ${practiced.has(e.id)?'secondary':'primary'}" data-endgame="${e.id}" ${state.match&&!state.match.result?'disabled':''}>${practiced.has(e.id)?'Watch & practice again':'Watch & practice'}</button></div>`).join('')}<p class="fine section-space">Untimed practice. Your progress is saved on this browser, and you can practice any position again.</p></div>`}
 const reviewSummaryCache=new WeakMap();
