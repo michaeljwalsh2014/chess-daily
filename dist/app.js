@@ -1,4 +1,4 @@
-import {recommendedBotKeys, recommendationRatings} from './bot-recommendations.js';
+import {recommendedBotKeys, recommendationRatings} from './bot-recommendations.js?v=2';
 import {forcedMateLine} from './puzzle-mate.js';
 import {learnGame,learnMoveChoice,positionKey as learningPositionKey} from './megalodon-learning.js?v=20261116-background-learning';
 import {materialSummary} from './material.js?v=20261115-material';
@@ -222,7 +222,7 @@ eloLabels[8]=' · Automatically adjusts to your level';
 function isEasyExclusive(level){return ['2'].includes(String(level))}function visibleBotKeys(){const keys=botListMode==='easy'?['9','2','3','8']:botListMode==='advanced'?['3','10','4','8']:botListMode==='master'?['4','5','12','11','8']:['9','1','2','3','10','4','5','12','11','6','7','8'];return keys}const allArenaBotKeys=['9','1','2','3','10','4','5','12','11','6','7','8'];function availableBotKeys(control,allBots=false){
  const recommended=!allBots&&botListMode==='recommended';
  const keys=(allBots||recommended?allArenaBotKeys:visibleBotKeys()).filter(k=>(!['12','13','14'].includes(k)||String(control)==='10')&&(!['6','7'].includes(k)||hyperAllowed(control)));
- return recommended?recommendedBotKeys(keys,ratingStartingPoint(),ratedGames()):keys;
+ return recommended?recommendedBotKeys(keys,currentRating()??ratingStartingPoint(),ratedGames()):keys;
 }
 function botOptions(control,selected,allBots=false){return availableBotKeys(control,allBots).map(k=>[k,LEVELS[k]]).map(([k,l])=>`<option value="${k}" ${String(k)===String(selected)?'selected':''}>${l.name}${eloLabels[k]||''}</option>`).join('')}function refreshBotSelect(select,control,allBots=false){if(!select)return;const wanted=select.value,allowed=availableBotKeys(control,allBots),next=allowed.includes(wanted)?wanted:allowed[0];select.innerHTML=botOptions(control,next,allBots);updateBotPicker(select)}
 const newBotsUntil=Date.parse('2026-11-17T20:05:50Z');function isNewBot(level){return Date.now()<newBotsUntil&&['9','10','11'].includes(String(level))}function newBadge(level){return isNewBot(level)?'<span class="new-badge">NEW</span>':''}function botBadges(level){return (['12','13','14'].includes(String(level))?'<span class="new-badge">EXPERIMENTAL</span>'+(Date.now()<Date.parse('2026-11-17T23:55:32Z')?'<span class="new-badge">NEW</span>':''):newBadge(level))+(isEasyExclusive(level)?'<span class="new-badge">EASY EXCLUSIVE</span>':'')}
