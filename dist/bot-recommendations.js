@@ -1,6 +1,6 @@
 export const recommendationRatings = {
   9: 300, 1: 500, 2: 700, 3: 1000, 10: 1250,
-  12: 1600, 4: 1700, 5: 1750, 11: 3200,
+  12: 1600, 4: 1700, 5: 1750, 15: 2000, 16: 2400, 11: 3200,
 };
 
 export function recommendedBotKeys(available, currentRating, games) {

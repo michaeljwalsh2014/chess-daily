@@ -95,3 +95,20 @@ test('review ignores incomplete bound scores and keeps the last exact score',asy
   const result=await stockfishMove({fen:c.fen(),level:7,review:true,budget:100},makeWorker);
   assert.equal(result.score,20);assert.ok(c.move(result.move));
 });
+
+test('Hammerhead and Kraken request their calibrated Stockfish strengths', async()=>{
+  for(const [level,elo] of [[15,2380],[16,2600]]){
+    const commands=[];
+    const createWorker=url=>{
+      const worker=nativeWorker(url);
+      const send=worker.postMessage;
+      worker.postMessage=line=>{commands.push(line);send(line)};
+      return worker;
+    };
+    const chess=new Chess();
+    const result=await stockfishMove({level,fen:chess.fen(),budget:100},createWorker);
+    assert.ok(chess.move(result.move));
+    assert.ok(commands.includes('setoption name UCI_LimitStrength value true'));
+    assert.ok(commands.includes('setoption name UCI_Elo value '+elo));
+  }
+});
