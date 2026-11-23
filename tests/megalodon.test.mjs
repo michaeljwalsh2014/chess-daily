@@ -1,3 +1,4 @@
+import {recommendationRatings} from '../dist/bot-recommendations.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {Chess} from '../dist/vendor/chess.js';
@@ -39,7 +40,7 @@ test('Megalodon saves clock time early and allows deeper searches later',()=>{
 test('Megalodon appears only for ten-minute games',()=>{
   const source=fs.readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
   const fragment=source.slice(source.indexOf('const eloLabels='),source.indexOf('function refreshBotSelect('));
-  const ctx=vm.createContext({botListMode:'master',LEVELS});vm.runInContext(fragment+';this.available=availableBotKeys;',ctx);
+  const ctx=vm.createContext({botListMode:'master',LEVELS,recommendationRatings});vm.runInContext(fragment+';this.available=availableBotKeys;',ctx);
   assert.ok(ctx.available('10').includes('12'));
   for(const control of ['0','1','5','15+10','30','30s','custom:600'])assert.ok(!ctx.available(control).includes('12'));
 });
