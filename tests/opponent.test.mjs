@@ -96,8 +96,8 @@ test('review ignores incomplete bound scores and keeps the last exact score',asy
   assert.equal(result.score,20);assert.ok(c.move(result.move));
 });
 
-test('Hammerhead and Kraken request their calibrated Stockfish strengths', async()=>{
-  for(const [level,elo] of [[15,2380],[16,2600]]){
+test('Stockfish opponents request their configured engine strengths', async()=>{
+  for(const [level,elo] of [[15,2380],[16,2600],[17,1840],[18,1880]]){
     const commands=[];
     const createWorker=url=>{
       const worker=nativeWorker(url);

@@ -1,7 +1,8 @@
-import {standardOpening} from './opening-book.js?v=20261116-megalodon-training';
+import {standardOpening} from './opening-book.js?v=20261125-reef-chrome';
 import {chooseMove as chooseMegalodonV3Move} from './megalodon-v3-engine.js?v=1';
 import {autoMove} from './auto-engine.js?v=20261114-auto-bullet-variety';
-import { stockfishMove } from './strong-engine.js?v=20261123-new-bots';
+import { LEVELS } from './game-core.js?v=20261125-reef-chrome';
+import { stockfishMove } from './strong-engine.js?v=20261125-reef-chrome';
 import { chooseMove } from './engine-core.js?v=20261122-big-fish-1000';
 
 self.onmessage = ({ data }) => {
@@ -15,7 +16,7 @@ self.onmessage = ({ data }) => {
       stockfishMove(data, undefined, result=>self.postMessage({id:data.id,...result,actualScore:-result.score,actualMate:result.mate==null?null:-result.mate,reviewVersion:3})).then(result => self.postMessage({ id: data.id, ...result, actualScore: -result.score, actualMate: result.mate == null ? null : -result.mate, reviewVersion: 3 })).catch(error => self.postMessage({ id: data.id, error: true, message: error.message }));
       return;
     }
-    if ([4, 5, 7, 11, 15, 16].includes(Number(data.level)) && data.chosenSan == null && data.chosen == null && data.chosenUci == null) {
+    if (([4, 5, 7].includes(Number(data.level)) || LEVELS[data.level]?.engine === 'stockfish') && data.chosenSan == null && data.chosen == null && data.chosenUci == null) {
       stockfishMove(data).then(result => self.postMessage({ id: data.id, ...result })).catch(error => self.postMessage({ id: data.id, error: true, message: error.message }));
       return;
     }

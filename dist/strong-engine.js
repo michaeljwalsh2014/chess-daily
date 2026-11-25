@@ -1,4 +1,4 @@
-import { LEVELS } from './game-core.js?v=20261123-new-bots';
+import { LEVELS } from './game-core.js?v=20261125-reef-chrome';
 import { Chess } from './vendor/chess.js';
 
 let ratingStockfishWorker = null, ratingStockfishReady = false;
@@ -85,7 +85,7 @@ export function stockfishMove(data, createWorker = createStockfishWorker, onProg
           }
         } else if (line.startsWith('bestmove ')) {
           let code = line.split(/\s+/)[1];
-          if(!data.review&&[4,5].includes(Number(data.level))){const capture=freeMaterialCapture(chess,code);if(capture)code=capture.from+capture.to+(capture.promotion||'')}
+          if(!data.review&&[4,5,17].includes(Number(data.level))){const capture=freeMaterialCapture(chess,code);if(capture)code=capture.from+capture.to+(capture.promotion||'')}
           if (data.autoStrength != null && candidates.size) {
             const complete=[...rounds.entries()].sort((a,b)=>b[0]-a[0]).find(([,round])=>round.has(1)&&round.size>=Math.min(Math.max(2, Math.min(12, Number(data.autoCandidates) || 12)),chess.moves().length));
             const pool=complete?complete[1]:candidates;

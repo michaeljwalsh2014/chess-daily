@@ -54,6 +54,11 @@ export const MEGALODON_LINES=[...OPENING_LINES,...[
 'c4 c5 Nc3 Nc6 g3 g6 Bg2 Bg7 Nf3 Nf6 O-O O-O d3 d6',
 'c4 e5 Nc3 Nf6 g3 d5 cxd5 Nxd5 Bg2 Nb6 Nf3 Nc6 O-O Be7'
 ].map(line=>line.split(' '))];
+// Chromejaw favors open Sicilians, the Scotch, and the King's Gambit when available.
+const CHROMEJAW_LINES=[
+  ...OPENING_LINES.filter(line=>/^(e4 c5 Nf3 (d6|Nc6) d4|e4 e5 Nf3 Nc6 d4) /.test(line.join(' '))),
+  'e4 e5 f4 exf4 Nf3 d5 exd5 Nf6'.split(' '),
+];
 export function standardOpening(data){
  if(data.review||data.initialFen||data.chosenSan!=null||data.chosen!=null||data.chosenUci!=null)return null;
  const megalodon=Number(data.level)===12,lines=megalodon?MEGALODON_LINES:OPENING_LINES;
@@ -64,7 +69,9 @@ export function standardOpening(data){
  // Give Big Fish, Megalodon, and the top Stockfish opponent sound openings.
  // Other bots occasionally leave book to keep their play varied.
  if(![3,11,12].includes(Number(data.level))&&(hash>>>0)%12===0)return null;
- const choices=[...new Set(lines.filter(line=>line.length>history.length&&history.every((san,i)=>san===line[i])).map(line=>line[history.length]))];
+ const continuations=line=>line.length>history.length&&history.every((san,i)=>san===line[i]);
+ const preferred=Number(data.level)===18?CHROMEJAW_LINES.filter(continuations):[];
+ const choices=[...new Set((preferred.length?preferred:lines.filter(continuations)).map(line=>line[history.length]))];
  if(!choices.length)return null;
  const san=choices[(hash>>>0)%choices.length];
  try{const m=c.move(san);return {move:{from:m.from,to:m.to,...(m.promotion?{promotion:m.promotion}:{})},san:m.san,engine:'opening-book',...(data.autoState?{autoState:data.autoState}:{})}}catch{return null}
