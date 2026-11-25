@@ -1,4 +1,4 @@
-import {recommendedBotKeys, recommendationRatings} from './bot-recommendations.js?v=20261125-reef-chrome';
+import {recommendedBotKeys, recommendationRatings} from './bot-recommendations.js?v=20261125-bot-ratings';
 import {forcedMateLine} from './puzzle-mate.js';
 import {learnGame,learnMoveChoice,positionKey as learningPositionKey} from './megalodon-learning.js?v=20261116-background-learning';
 import {materialSummary} from './material.js?v=20261115-material';

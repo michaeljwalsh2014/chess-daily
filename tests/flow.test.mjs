@@ -60,7 +60,7 @@ test('the opposition practice accepts d5 to d6 and keeps playing from the result
 });
 
 test('Progress uses the picker ratings for Reef Stalker and Chromejaw',()=>{
-  for(const [level,expected] of [[17,1219],[18,1220]]){
+  for(const [level,expected] of [[17,1220],[18,1221]]){
     const rating=progressForReviewedWin(level);
     assert.equal(rating.history.at(-1).quality,50);
     assert.equal(rating.gameRating,expected,'reviewed win against bot '+level);
