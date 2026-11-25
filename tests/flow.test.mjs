@@ -1,6 +1,14 @@
 import fs from 'node:fs';import {test} from 'node:test';import assert from 'node:assert/strict';
 const src=fs.readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
-const harness=src.slice(0,src.indexOf("$$('nav button').forEach(b=>b.onclick"))+`\nrender=()=>{};save=()=>true;flushTime=()=>{};export function resignationFlow(){state=normalize(null);state.match={moves:['e4'],level:2,paused:true,clock:{w:600,b:600},turn:'b'};resignGame();resignGame();return state;}export function challengeFlow(puzzles){state=normalize(null);state.coach=newCoach(800);state.profile={goal:1500};bank=puzzles;puzzleMap=new Map(bank.map(p=>[p.id,p]));toast=()=>{};adjustChallenge(100);const target=trainingCoach().target;const choices=Object.keys(SKILLS).map(k=>chooseTrainingPuzzle(k));selectedSkill='checkmates';beginSession();let p=puzzleMap.get(state.active.puzzle.id);for(let i=0;i<p.moves.length;i+=2){submitMove(uci(p.moves[i]));if(state.active.puzzle.done)break;}return {target,choices,next:trainingCoach().target};}export function run(p,moves=p.moves){state=normalize(null);state.coach=newCoach(800);puzzleMap=new Map([[p.id,p]]);state.active={skill:p.skill,results:[],puzzle:{id:p.id,cursor:0,seconds:10,mistakes:[],hints:0,done:false,moves:[],targetBefore:950}};for(let i=0;i<moves.length;i+=2){submitMove(uci(moves[i]));if(state.active.puzzle.done)break;}return state.active;}export function practiceEndgame(id,moves,replies,attempt=[]){
+const harness=src.slice(0,src.indexOf("$$('nav button').forEach(b=>b.onclick"))+`\nrender=()=>{};save=()=>true;flushTime=()=>{};export function progressForReviewedWin(level,autoState){
+  state=normalize(null);state.profile={startRating:1200};
+  state.games=[{id:1,level,autoState,result:'win',moves:['e4','e5','Nf3'],
+    startingAnalysis:{reviewVersion:3,move:{from:'e2',to:'e4'}},
+    analysis:[{reviewVersion:3},{reviewVersion:3,move:{from:'b1',to:'c3'}},{reviewVersion:3}]}];
+  recalculateAutoRating();
+  return state.autoRating;
+}
+export function resignationFlow(){state=normalize(null);state.match={moves:['e4'],level:2,paused:true,clock:{w:600,b:600},turn:'b'};resignGame();resignGame();return state;}export function challengeFlow(puzzles){state=normalize(null);state.coach=newCoach(800);state.profile={goal:1500};bank=puzzles;puzzleMap=new Map(bank.map(p=>[p.id,p]));toast=()=>{};adjustChallenge(100);const target=trainingCoach().target;const choices=Object.keys(SKILLS).map(k=>chooseTrainingPuzzle(k));selectedSkill='checkmates';beginSession();let p=puzzleMap.get(state.active.puzzle.id);for(let i=0;i<p.moves.length;i+=2){submitMove(uci(p.moves[i]));if(state.active.puzzle.done)break;}return {target,choices,next:trainingCoach().target};}export function run(p,moves=p.moves){state=normalize(null);state.coach=newCoach(800);puzzleMap=new Map([[p.id,p]]);state.active={skill:p.skill,results:[],puzzle:{id:p.id,cursor:0,seconds:10,mistakes:[],hints:0,done:false,moves:[],targetBefore:950}};for(let i=0;i<moves.length;i+=2){submitMove(uci(moves[i]));if(state.active.puzzle.done)break;}return state.active;}export function practiceEndgame(id,moves,replies,attempt=[]){
   state=normalize(null);
   endgameDemo={id,phase:'try',attempt:[...attempt]};
   for(const [index,move] of moves.entries()){
@@ -11,7 +19,7 @@ const harness=src.slice(0,src.indexOf("$$('nav button').forEach(b=>b.onclick"))+
   return {demo:endgameDemo,board:endgamePracticeBoard(),completed:state.endgamesDone};
 }\n`;
 // A temporary sibling module exercises the actual application move handler.
-const file=new URL('../dist/.flow-harness.mjs',import.meta.url);fs.writeFileSync(file,harness);globalThis.document={addEventListener:()=>{},querySelector:()=>null,querySelectorAll:()=>[]};globalThis.localStorage={getItem:()=>null};const {run,challengeFlow,resignationFlow,practiceEndgame}=await import(file.href);fs.unlinkSync(file);
+const file=new URL('../dist/.flow-harness.mjs',import.meta.url);fs.writeFileSync(file,harness);globalThis.document={addEventListener:()=>{},querySelector:()=>null,querySelectorAll:()=>[]};globalThis.localStorage={getItem:()=>null};const {run,challengeFlow,resignationFlow,practiceEndgame,progressForReviewedWin}=await import(file.href);fs.unlinkSync(file);
 test('every puzzle completes through the actual move handler, exactly once',()=>{const bank=JSON.parse(fs.readFileSync(new URL('../dist/puzzles.json',import.meta.url)));for(const p of bank){const d=run(p);assert.equal(d.puzzle.done,true,p.id);assert.equal(d.results.length,1,p.id);assert.equal(d.results[0].moves.filter((_,i)=>i%2===0).length,Math.ceil(p.moves.length/2),p.id)}});
 
 test("Harder carries across all skills and clean solves still adapt",()=>{const bank=JSON.parse(fs.readFileSync(new URL("../dist/puzzles.json",import.meta.url)));const r=challengeFlow(bank);assert.equal(r.target,1050);for(const p of r.choices)assert.ok(p.rating>=r.target);assert.ok(r.next>r.target);});
@@ -49,4 +57,17 @@ test('the opposition practice accepts d5 to d6 and keeps playing from the result
   assert.equal(result.board.get('f8').type,'k');
   assert.equal(result.board.turn(),'w');
   assert.equal(result.demo.phase,'try');
+});
+
+test('Progress uses the picker ratings for Reef Stalker and Chromejaw',()=>{
+  for(const [level,expected] of [[17,1219],[18,1220]]){
+    const rating=progressForReviewedWin(level);
+    assert.equal(rating.history.at(-1).quality,50);
+    assert.equal(rating.gameRating,expected,'reviewed win against bot '+level);
+  }
+});
+
+test('Progress still uses the saved Auto strength and falls back for unknown opponents',()=>{
+  assert.equal(progressForReviewedWin(8,{playerRating:1600}).gameRating,1219);
+  assert.equal(progressForReviewedWin(999).gameRating,1210);
 });
