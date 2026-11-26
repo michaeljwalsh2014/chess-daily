@@ -1,4 +1,4 @@
-import {gameFrom} from './game-core.js';
+import {gameFrom,LEVELS} from './game-core.js';
 export const SKILLS = {
   checkmates:{name:'Checkmates',short:'Close every escape',icon:'♚',description:'Put the king in check with no safe escape.',tip:'After a check, look for every escape, capture, and block.'},
   forks:{name:'Forks',short:'Find two targets',icon:'♞',description:'Use one piece to attack two targets at once.',tip:'Look for a move that attacks the king and another valuable piece.'},
@@ -22,7 +22,7 @@ export function lessonFor(state,skill,puzzle){const used=new Set(state.sessions.
 export function weekKey(now=new Date()){const d=new Date(now);d.setHours(12,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return localDate(d)}
 export function localDate(d=new Date()){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 export function normalize(raw){const base={schema:2,sessions:[],ratings:[],checks:{},seen:[],seenPositions:[],profile:null,coach:null,active:null};if(!raw)return base;const s={...base,...raw,schema:2};s.sessions=Array.isArray(s.sessions)?s.sessions:[];s.ratings=Array.isArray(s.ratings)?s.ratings:[];if(!s.checks||typeof s.checks!=='object'||Array.isArray(s.checks))s.checks={};if(!Array.isArray(s.seen))s.seen=[];if(!Array.isArray(s.seenPositions))s.seenPositions=[];return s;}
-export function validBackup(x,bankIds){
+export function validBackup(x,bankIds,levels=LEVELS){
   const dateOK=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v);
   const finite=(v,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isFinite(v)&&v>=min&&v<=max;
   const resultOK=r=>r&&bankIds.has(r.id)&&finite(r.seconds)&&typeof r.clean==='boolean'&&Array.isArray(r.mistakes)&&finite(r.hints,0,2)&&finite(r.rating,100,3500)&&finite(r.targetAfter,400,2500);
@@ -42,7 +42,7 @@ export function validBackup(x,bankIds){
     }
   }
   if(x.draft&&(!/^([0-3])-([0-3])$/.test(x.draft.lesson)||!Array.isArray(x.draft.answers)||!Array.isArray(x.draft.outcomes)))return false;
-  const gameOK=g=>{try{if(!g||!Array.isArray(g.moves)||g.moves.length>2000||![1,2,3,4,5,6,7,8,9,10,11,12].includes(g.level))return false;gameFrom(g);if(g.clock&&(!finite(g.clock.w)||!finite(g.clock.b)))return false;if(g.increment!=null&&!finite(g.increment,0,120))return false;return true}catch{return false}};
+  const gameOK=g=>{try{if(!g||!Array.isArray(g.moves)||g.moves.length>2000||!Number.isInteger(g.level)||!Object.hasOwn(levels,g.level))return false;gameFrom(g);if(g.clock&&(!finite(g.clock.w)||!finite(g.clock.b)))return false;if(g.increment!=null&&!finite(g.increment,0,120))return false;return true}catch{return false}};
   if(x.games&&(!Array.isArray(x.games)||!x.games.every(gameOK)))return false;
   if(x.match&&!gameOK(x.match))return false;
   if(x.trainingCoach&&(!finite(x.trainingCoach.target,400,2500)||!finite(x.trainingCoach.fast)||!finite(x.trainingCoach.struggles)||!finite(x.trainingCoach.total)||!finite(x.trainingCoach.solved)))return false;
