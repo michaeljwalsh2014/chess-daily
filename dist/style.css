@@ -519,3 +519,103 @@ body.layout-ipad.reviewing-game .review-layout.simple-review .section-space .but
     max-height: min(220px, 27dvh);
   }
 }
+
+/* The focused puzzle fills the iPad width after the sidebar is hidden. */
+body.layout-ipad.focus-training main {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+body.layout-ipad.focus-training #content {
+  padding: 0;
+}
+body.layout-ipad.focus-training .focus-room {
+  --puzzle-width: min(100%, 760px, max(280px, calc(100dvh - 280px)));
+  overflow: auto;
+  padding: 16px clamp(12px, 3vw, 32px);
+}
+body.layout-ipad.focus-training .focus-room > :not(.focus-controls) {
+  width: var(--puzzle-width);
+  max-width: none;
+}
+body.layout-ipad.focus-training .focus-toolbar {
+  flex-wrap: wrap;
+}
+body.layout-ipad.focus-training .focus-board {
+  flex: none;
+}
+body.layout-ipad.focus-training .focus-board .board {
+  height: auto;
+  aspect-ratio: 1;
+}
+body.layout-ipad.focus-training .focus-controls {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+body.layout-ipad.focus-training .focus-room .button {
+  min-height: 44px;
+  font-size: 13px;
+}
+body.layout-ipad.focus-training .focus-status,
+body.layout-ipad.focus-training .focus-message,
+body.layout-ipad.focus-training .focus-challenge > span {
+  font-size: 14px;
+}
+@media (orientation: landscape) and (min-width: 760px) {
+  body.layout-ipad.focus-training .focus-room {
+    --puzzle-width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(270px, 30vw, 365px);
+    grid-template-rows: repeat(5, auto) minmax(0, 1fr);
+    gap: 12px 24px;
+    align-items: start;
+    max-width: 1260px;
+    margin: 0 auto;
+  }
+  body.layout-ipad.focus-training .focus-toolbar {
+    grid-column: 1 / -1;
+  }
+  body.layout-ipad.focus-training .focus-room .focus-board {
+    grid-column: 1;
+    grid-row: 2 / 7;
+    justify-self: center;
+    width: min(100%, max(280px, calc(100dvh - 96px)));
+  }
+  body.layout-ipad.focus-training .focus-status,
+  body.layout-ipad.focus-training .focus-challenge,
+  body.layout-ipad.focus-training .focus-message,
+  body.layout-ipad.focus-training .focus-controls {
+    grid-column: 2;
+  }
+  body.layout-ipad.focus-training .focus-challenge {
+    flex-wrap: wrap;
+  }
+  body.layout-ipad.focus-training .focus-message {
+    text-align: left;
+  }
+  body.layout-ipad.focus-training .focus-controls {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 760px) {
+  body.layout-ipad.focus-training .sidebar,
+  body.layout-ipad.focus-training .topbar {
+    display: none;
+  }
+  body.layout-ipad.focus-training .focus-room {
+    --puzzle-width: min(100%, max(260px, calc(100dvh - 340px)));
+  }
+}
+@media (max-width: 550px) {
+  body.layout-ipad.focus-training .focus-room .focus-toolbar {
+    width: 100%;
+    gap: 6px;
+  }
+  body.layout-ipad.focus-training .focus-toolbar .button {
+    padding-inline: 8px;
+  }
+  body.layout-ipad.focus-training .focus-clock {
+    gap: 6px;
+  }
+}
