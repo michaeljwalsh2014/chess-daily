@@ -59,6 +59,8 @@ const CHROMEJAW_LINES=[
   ...OPENING_LINES.filter(line=>/^(e4 c5 Nf3 (d6|Nc6) d4|e4 e5 Nf3 Nc6 d4) /.test(line.join(' '))),
   'e4 e5 f4 exf4 Nf3 d5 exd5 Nf6'.split(' '),
 ];
+// Ironfin favors the Caro-Kann and solid queen's pawn structures.
+const IRONFIN_LINES=OPENING_LINES.filter(line=>/^(e4 c6|d4 d5 c4 (e6|c6)) /.test(line.join(' ')));
 export function standardOpening(data){
  if(data.review||data.initialFen||data.chosenSan!=null||data.chosen!=null||data.chosenUci!=null)return null;
  const megalodon=Number(data.level)===12,lines=megalodon?MEGALODON_LINES:OPENING_LINES;
@@ -70,7 +72,8 @@ export function standardOpening(data){
  // Other bots occasionally leave book to keep their play varied.
  if(![3,11,12].includes(Number(data.level))&&(hash>>>0)%12===0)return null;
  const continuations=line=>line.length>history.length&&history.every((san,i)=>san===line[i]);
- const preferred=Number(data.level)===18?CHROMEJAW_LINES.filter(continuations):[];
+ const repertoire={18:CHROMEJAW_LINES,19:IRONFIN_LINES}[data.level];
+ const preferred=repertoire?.filter(continuations)??[];
  const choices=[...new Set((preferred.length?preferred:lines.filter(continuations)).map(line=>line[history.length]))];
  if(!choices.length)return null;
  const san=choices[(hash>>>0)%choices.length];

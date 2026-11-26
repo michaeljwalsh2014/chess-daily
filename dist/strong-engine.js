@@ -1,4 +1,4 @@
-import { LEVELS } from './game-core.js?v=20261125-reef-chrome';
+import { LEVELS } from './game-core.js?v=20261126-ironfin';
 import { Chess } from './vendor/chess.js';
 
 let ratingStockfishWorker = null, ratingStockfishReady = false;

@@ -1,8 +1,8 @@
-import {standardOpening} from './opening-book.js?v=20261125-reef-chrome';
+import {standardOpening} from './opening-book.js?v=20261126-ironfin';
 import {chooseMove as chooseMegalodonV3Move} from './megalodon-v3-engine.js?v=1';
 import {autoMove} from './auto-engine.js?v=20261114-auto-bullet-variety';
-import { LEVELS } from './game-core.js?v=20261125-reef-chrome';
-import { stockfishMove } from './strong-engine.js?v=20261125-reef-chrome';
+import { LEVELS } from './game-core.js?v=20261126-ironfin';
+import { stockfishMove } from './strong-engine.js?v=20261126-ironfin';
 import { chooseMove } from './engine-core.js?v=20261122-big-fish-1000';
 
 self.onmessage = ({ data }) => {

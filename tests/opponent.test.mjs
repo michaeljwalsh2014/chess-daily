@@ -97,7 +97,7 @@ test('review ignores incomplete bound scores and keeps the last exact score',asy
 });
 
 test('Stockfish opponents request their configured engine strengths', async()=>{
-  for(const [level,elo] of [[15,2380],[16,2600],[17,1840],[18,1880]]){
+  for(const [level,elo] of [[15,2380],[16,2600],[17,1840],[18,1880],[19,1920]]){
     const commands=[];
     const createWorker=url=>{
       const worker=nativeWorker(url);
