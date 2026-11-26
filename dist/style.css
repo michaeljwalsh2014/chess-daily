@@ -271,3 +271,251 @@ body.dark-mode {
 .lesson-preview>span{display:grid;place-items:center;background:#f2e4cb}
 .lesson-preview>span.dark{background:#bd9069}
 .lesson-preview img{width:90%;height:90%;object-fit:contain}
+
+/* Let the iPad Home page flow and scroll with its content. */
+body.layout-ipad.board-home-active,
+body.layout-ipad.board-home-active .app-shell,
+body.layout-ipad.board-home-active main {
+  height: auto;
+  overflow: visible;
+}
+body.layout-ipad.board-home-active main {
+  display: block;
+  min-height: 100dvh;
+  padding-inline: clamp(16px, 3vw, 40px);
+}
+body.layout-ipad.board-home-active #content {
+  padding: 24px 0 32px !important;
+}
+body.layout-ipad.board-home-active .board-home {
+  display: block;
+  height: auto;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+body.layout-ipad.board-home-active .board-home-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, .78fr);
+  align-items: start;
+  gap: 24px;
+}
+body.layout-ipad.board-home-active .board-home-board {
+  width: min(100%, 620px);
+  max-height: none;
+  margin: 0 auto;
+}
+body.layout-ipad.board-home-active .board-home-board .board {
+  height: auto;
+}
+body.layout-ipad.board-home-active .board-home-side {
+  gap: 20px;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+body.layout-ipad.board-home-active .board-home-heading > .button,
+body.layout-ipad.board-home-active .board-home-buttons .button {
+  min-height: 44px;
+}
+body.layout-ipad.board-home-active .board-home-checklist label {
+  min-height: 36px;
+  font-size: 14px;
+}
+@media (orientation: portrait) {
+  body.layout-ipad.board-home-active .board-home-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(270px, .72fr);
+    gap: 20px;
+  }
+  body.layout-ipad.board-home-active .board-home-side {
+    display: contents;
+  }
+  body.layout-ipad.board-home-active .board-home-heading {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+  }
+  body.layout-ipad.board-home-active .board-home-heading p {
+    margin-bottom: 0;
+  }
+}
+@media (max-width: 599px) {
+  body.layout-ipad.board-home-active .board-home-layout {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 480px;
+    margin-inline: auto;
+  }
+}
+@media (max-width: 460px) {
+  body.layout-ipad.board-home-active .board-home-checklist {
+    grid-template-columns: 1fr;
+  }
+}
+@media (orientation: landscape) and (max-height: 760px) {
+  body.layout-ipad.board-home-active #content {
+    padding: 16px 0 !important;
+  }
+  body.layout-ipad.board-home-active .board-home-board {
+    width: min(100%, calc(100dvh - 205px));
+  }
+}
+@media (max-width: 760px) {
+  body.layout-ipad.board-home-active #content {
+    padding: 16px 0 !important;
+  }
+  body.layout-ipad.board-home-active .sidebar {
+    display: none;
+  }
+  body.layout-ipad.board-home-active .topbar {
+    flex-direction: row;
+    align-items: center;
+  }
+  body.layout-ipad.board-home-active .topbar-tools {
+    width: auto;
+    flex-shrink: 0;
+  }
+}
+
+/* iPad game setup uses the width beside the preview for the form. */
+body.layout-ipad .quick-game-panel {
+  padding: clamp(18px, 2.5vw, 30px);
+}
+body.layout-ipad .quick-game-panel .setup-more {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+body.layout-ipad .quick-game-panel .setup-more .button {
+  flex: 1 1 auto;
+}
+body.layout-ipad .quick-game-panel .button,
+body.layout-ipad .quick-game-panel .bot-picker-details > summary {
+  min-height: 44px;
+}
+@media (min-width: 680px) {
+  body.layout-ipad .game-setup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, .85fr);
+    align-items: start;
+    gap: clamp(18px, 3vw, 36px);
+    max-width: 1160px;
+    margin: 0 auto;
+  }
+  body.layout-ipad .game-setup-preview {
+    width: min(100%, 620px);
+    margin: 0 auto;
+  }
+  body.layout-ipad .game-setup > .panel {
+    min-width: 0;
+    margin: 0;
+  }
+  body.layout-ipad .game-setup > :not(.game-setup-intro):not(.quick-game-panel) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  body.layout-ipad:has(.game-setup) .sidebar {
+    display: none;
+  }
+}
+
+/* Keep review playback next to the board, with details below or beside it. */
+body.layout-ipad.reviewing-game,
+body.layout-ipad.reviewing-game .app-shell,
+body.layout-ipad.reviewing-game main {
+  height: auto;
+  overflow: visible;
+}
+body.layout-ipad.reviewing-game main {
+  display: block;
+  width: 100%;
+  max-width: 1280px;
+  padding-inline: clamp(14px, 2.5vw, 32px);
+}
+body.layout-ipad.reviewing-game .sidebar,
+body.layout-ipad.reviewing-game .topbar {
+  display: none;
+}
+body.layout-ipad.reviewing-game #content {
+  overflow: visible;
+  padding: 8px 0 24px !important;
+}
+body.layout-ipad.reviewing-game .review-room {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  max-width: none;
+  gap: 12px;
+}
+body.layout-ipad.reviewing-game .review-room > .row:first-child {
+  margin: 0;
+}
+body.layout-ipad.reviewing-game .review-performance {
+  order: 1;
+}
+body.layout-ipad.reviewing-game .review-layout.simple-review {
+  max-width: none;
+  margin: 0;
+}
+body.layout-ipad.reviewing-game .review-layout.simple-review > div {
+  display: grid;
+  height: auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto;
+  align-items: start;
+  gap: 10px;
+}
+body.layout-ipad.reviewing-game .review-layout.simple-review > div > * {
+  grid-column: 1;
+  grid-row: auto;
+  margin: 0;
+}
+body.layout-ipad.reviewing-game .review-layout.simple-review .review-board-with-eval {
+  grid-row: 1;
+  width: min(100%, 660px, max(260px, calc(100dvh - 200px)));
+  height: auto;
+  margin: 0 auto;
+}
+body.layout-ipad.reviewing-game .review-board-with-eval .game-board {
+  flex: 1 1 0;
+  width: auto;
+  height: auto;
+  min-width: 0;
+}
+body.layout-ipad.reviewing-game .review-board-with-eval .board {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+body.layout-ipad.reviewing-game .review-layout.simple-review > div > .row.section-space {
+  grid-row: 2;
+  justify-content: center;
+  margin: 0;
+}
+body.layout-ipad.reviewing-game .review-layout.simple-review .section-space .button {
+  min-height: 44px;
+}
+@media (orientation: landscape) and (min-width: 760px) {
+  body.layout-ipad.reviewing-game .review-layout.simple-review > div {
+    grid-template-columns: minmax(0, 1fr) minmax(270px, .72fr);
+    grid-template-rows: auto auto auto 1fr auto;
+    column-gap: clamp(16px, 3vw, 36px);
+  }
+  body.layout-ipad.reviewing-game .review-layout.simple-review .review-board-with-eval {
+    grid-row: 1 / 5;
+    align-self: start;
+  }
+  body.layout-ipad.reviewing-game .review-layout.simple-review > div > .row.section-space {
+    grid-row: 5;
+  }
+  body.layout-ipad.reviewing-game .review-layout.simple-review > div > .fine,
+  body.layout-ipad.reviewing-game .review-layout.simple-review > div > .row:not(.section-space),
+  body.layout-ipad.reviewing-game .review-layout.simple-review > div > .review-move-panel {
+    grid-column: 2;
+  }
+  body.layout-ipad.reviewing-game .review-move-list {
+    max-height: min(220px, 27dvh);
+  }
+}
