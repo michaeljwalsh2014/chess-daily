@@ -8,6 +8,7 @@ import {EXTRA_SKILLS} from './skill-lessons.js?v=100';
 let reviewDrawMode=false,reviewArrowGesture=null;const reviewDrawings=new Map();
 let liveHistoryStep=null;
 let dragGesture=null,suppressBoardClick=false,dragDropInProgress=false;
+let touchPress=null,handledTouchBoard=null;
 import {autoStartingState} from './auto-profile.js?v=20261114-1';
 let lessonStartMode='watch';try{lessonStartMode=localStorage.getItem('chess-lesson-start')==='practice'?'practice':'watch'}catch{}
 let demonstrationSpeed=1;try{const speed=Number(localStorage.getItem('chess-demonstration-speed'));if([.5,1,1.5,2].includes(speed))demonstrationSpeed=speed}catch{}
@@ -597,7 +598,12 @@ if(puzzles.status==='rejected')toast('Puzzles could not load. You can still play
 document.addEventListener('pointerdown',e=>{
  if(e.button===2&&dragGesture){e.preventDefault();cancelPieceDrag();return}
  if(dragGesture||e.isPrimary===false||e.button!==0)return;
- const square=e.target.closest('.square[data-square]'),image=square?.querySelector('img');
+ const square=e.target.closest('.square[data-square]');
+ handledTouchBoard=null;
+ if(e.pointerType==='touch'&&square){
+  touchPress={pointer:e.pointerId,square,x:e.clientX,y:e.clientY};
+ }
+ const image=square?.querySelector('img');
  if(!image)return;
  const game=view==='game'&&state.match?match():view==='training'&&state.active?activeGame():view==='learn'&&lessonState?.phase==='try'?(lessonState.waiting?lessonPremovePosition():lessonBoard()):view==='endgame-demo'&&endgameDemo?.phase==='try'?endgamePracticeBoard():null;
  if(!game)return;
@@ -631,7 +637,7 @@ document.addEventListener('pointermove',e=>{
  }
  e.preventDefault();
 },{passive:false});
-function cancelPieceDrag(){clearDrag();gameSelection=null;selectedSquare=null;suppressBoardClick=true;setTimeout(()=>suppressBoardClick=false,0);if(view==='game'&&state.match){clearPremoves(state.match);save()}render()}
+function cancelPieceDrag(){touchPress=null;clearDrag();gameSelection=null;selectedSquare=null;suppressBoardClick=true;setTimeout(()=>suppressBoardClick=false,0);if(view==='game'&&state.match){clearPremoves(state.match);save()}render()}
 document.addEventListener('contextmenu',event=>{if(event.target.closest?.('.review-arrow-board')){event.preventDefault();return}if(dragGesture||event.target.closest?.('.board')){event.preventDefault();cancelPieceDrag()}},true);
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&dragGesture){event.preventDefault();cancelPieceDrag()}});
 function hideDragSource(d){
@@ -670,8 +676,20 @@ function dragDestination(d,event){
  return squareAt(x,y)||squareAt(event.clientX,event.clientY);
 }
 document.addEventListener('pointerup',e=>{
- if(!dragGesture||dragGesture.pointer!==e.pointerId)return;
- const d=clearDrag();
+ const press=e.pointerType==='touch'&&touchPress?.pointer===e.pointerId?touchPress:null;
+ if(press)touchPress=null;
+ const d=dragGesture?.pointer===e.pointerId?clearDrag():null;
+ if(press){
+  // A touch is complete at release, even when the browser omits its click.
+  handledTouchBoard=press.square.closest('.board');
+  const distance=Math.hypot(e.clientX-press.x,e.clientY-press.y);
+  const released=document.elementFromPoint(e.clientX,e.clientY);
+  if(distance<=6&&released?.closest('.square[data-square]')===press.square){
+   handleBoardSquare(press.square.dataset.square);
+   return;
+  }
+ }
+ if(!d)return;
  const destination=dragDestination(d,e);
  // A quick release can reach another square before any pointermove is delivered.
  const moved=Math.hypot(e.clientX-d.x,e.clientY-d.y)>6;
@@ -686,12 +704,19 @@ document.addEventListener('pointerup',e=>{
   handleBoardSquare(destination.dataset.square);
  }finally{dragDropInProgress=false}
 });
-document.addEventListener('pointercancel',e=>{if(dragGesture?.pointer===e.pointerId)clearDrag()});
-window.addEventListener('blur',()=>clearDrag());
+document.addEventListener('pointercancel',e=>{
+ if(touchPress?.pointer===e.pointerId)touchPress=null;
+ if(dragGesture?.pointer===e.pointerId)clearDrag();
+});
+window.addEventListener('blur',()=>{
+ touchPress=null;
+ clearDrag();
+});
 document.addEventListener('click',e=>{
  const square=e.target.closest('.board .square[data-square]');
  if(!square)return;
- if(suppressBoardClick){e.preventDefault();e.stopImmediatePropagation();return}
+ const followsTouch=handledTouchBoard===square.closest('.board')&&(e.detail>0||e.pointerType==='touch');
+ if(followsTouch||suppressBoardClick){e.preventDefault();e.stopImmediatePropagation();return}
  handleBoardSquare(square.dataset.square);
 },true);
 document.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key)||event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;const target=event.target;if(document.querySelector('dialog[open]')||target?.closest?.('input,textarea,select,summary,[contenteditable]')||target?.isContentEditable)return;const delta=event.key==='ArrowRight'?1:-1;if(view==='game'&&state.match){event.preventDefault();browseLiveHistory(delta)}else if(view==='games'&&reviewGameIndex!=null){event.preventDefault();const total=state.games?.[reviewGameIndex]?.moves?.length||0;gameStep=clamp(gameStep+delta,0,total);render()}});

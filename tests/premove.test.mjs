@@ -85,3 +85,27 @@ test('fast practice drops use the piece center and the correct move handler',()=
     assert.deepEqual(move,{from:'g1',to:'f3'},view);
   }
 });
+
+test('a touch release selects a board square without a browser click',()=>{
+  const source=readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+  const start=source.indexOf('function handleBoardSquare(');
+  const end=source.indexOf("document.addEventListener('pointercancel'",start);
+  const board={};
+  const square={dataset:{square:'e4'},closest:()=>board};
+  let onRelease, selected;
+  const ctx=vm.createContext({
+    document:{
+      addEventListener(_,handler){onRelease=handler},
+      elementFromPoint:()=>({closest:()=>square}),
+    },
+    touchPress:{pointer:1,square,x:20,y:30},
+    dragGesture:null,
+    view:'training',
+    trySquare(to){selected=to},
+  });
+  vm.runInContext(source.slice(start,end),ctx);
+  onRelease({pointerType:'touch',pointerId:1,clientX:20,clientY:30});
+  assert.equal(selected,'e4');
+  assert.equal(ctx.touchPress,null);
+  assert.equal(ctx.handledTouchBoard,board);
+});
